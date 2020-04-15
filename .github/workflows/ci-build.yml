@@ -52,6 +52,13 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-suggest # --prefer-source
 
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
+      - name: Check code style
+        run: ./vendor_php/bin/spiral-cs check src tests
+
+
       - name: Install Go dependencies
         run: go mod download
 
@@ -59,6 +66,7 @@ jobs:
         run: |
           docker-compose -f ./tests/docker-compose.yaml up -d
           composer update
+          ./vendor_php/bin/phpunit
           go test -v -race -cover ./driver/boltdb     -coverprofile=boltdb.txt     -covermode=atomic
           go test -v -race -cover ./driver/memcached  -coverprofile=memcached.txt  -covermode=atomic
           go test -v -race -cover ./driver/redis      -coverprofile=redis.txt      -covermode=atomic
