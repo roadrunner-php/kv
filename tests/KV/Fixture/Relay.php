@@ -11,7 +11,7 @@ class Relay implements RelayInterface
     /**
      * @inheritDoc
      */
-    public function send($payload, int $flags = null)
+    public function send($payload, int $flags = null): ?int
     {
         return null;
     }
@@ -19,7 +19,7 @@ class Relay implements RelayInterface
     /**
      * @inheritDoc
      */
-    public function receiveSync(int &$flags = null)
+    public function receiveSync(int &$flags = null): ?int
     {
         return null;
     }

@@ -13,6 +13,7 @@ namespace Spiral\KV;
 use DateTimeInterface;
 use Spiral\Goridge\RelayInterface as Relay;
 use Spiral\Goridge\RPC;
+use Throwable;
 
 class SharedCache implements SharedCacheInterface
 {
@@ -170,7 +171,7 @@ class SharedCache implements SharedCacheInterface
                 pack(static::PACK_FORMAT, $payload),
                 Relay::PAYLOAD_RAW
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new SharedCacheException($e->getMessage(), $e->getCode(), $e);
         }
     }
