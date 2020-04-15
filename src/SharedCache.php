@@ -53,7 +53,14 @@ class SharedCache implements SharedCacheInterface
             ));
         }
 
-        return array_merge(array_fill_keys($keys, false), arrayFetchKeys($response, $keys));
+        $result = array_fill_keys($keys, false);
+        foreach (arrayFetchKeys($response, $keys) as $key => $value) {
+            if ((bool)$value) {
+                $result[$key] = (bool)$value;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -133,7 +140,15 @@ class SharedCache implements SharedCacheInterface
             ));
         }
 
-        return array_merge(array_fill_keys($keys, null), arrayFetchKeys($response, $keys));
+        $result = array_fill_keys($keys, null);
+        foreach (arrayFetchKeys($response, $keys) as $key => $value) {
+            //todo convert to datetime
+//            if ((bool)$value) {
+//                $result[$key] = (bool)$value;
+//            }
+        }
+
+        return $result;
     }
 
     /**
