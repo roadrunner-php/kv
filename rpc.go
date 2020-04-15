@@ -2,20 +2,11 @@ package kv
 
 import (
 	"context"
-	"time"
 )
 
 type RpcServer struct {
 	svc *Service
 }
-
-// FOR PHP
-const (
-	memcachedStorage = "memcached"
-	redisStorage     = "redis"
-	boltDBStorage    = "boltdb"
-	defaultStorage   = "default"
-)
 
 type Data struct {
 	Storage string   `json:"storage"`
@@ -25,13 +16,13 @@ type Data struct {
 
 // TODO skip false values, discuss with JD, Val
 func (r *RpcServer) Has(data Data, res *map[string]bool) error {
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+	ctx := context.Background()
 	ret, err := r.svc.Storages[data.Storage].Has(ctx, data.Keys...)
 	if err != nil {
 		return err
 	}
 	// fill the map
-	res = &ret
+	*res = ret
 
 	return nil
 }
