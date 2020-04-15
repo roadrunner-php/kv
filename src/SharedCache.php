@@ -53,7 +53,7 @@ class SharedCache implements SharedCacheInterface
             ));
         }
 
-        return arrayFetchKeys($response, $keys) + array_fill_keys($keys, false);
+        return array_merge(array_fill_keys($keys, false), arrayFetchKeys($response, $keys));
     }
 
     /**
@@ -84,7 +84,7 @@ class SharedCache implements SharedCacheInterface
             ));
         }
 
-        return arrayFetchKeys($response, $keys) + array_fill_keys($keys, null);
+        return array_merge(array_fill_keys($keys, null), arrayFetchKeys($response, $keys));
     }
 
     /**
@@ -133,7 +133,7 @@ class SharedCache implements SharedCacheInterface
             ));
         }
 
-        return arrayFetchKeys($response, $keys) + array_fill_keys($keys, null);
+        return array_merge(array_fill_keys($keys, null), arrayFetchKeys($response, $keys));
     }
 
     /**

@@ -5,22 +5,35 @@ declare(strict_types=1);
 namespace Spiral\KV\Tests\Fixture;
 
 use Spiral\Goridge\RPC as GoridgeRPC;
+use Throwable;
 
 class RPC extends GoridgeRPC
 {
+    /** @var mixed */
+    private $return;
+
     /**
      * @inheritDoc
+     * @throws Throwable
      */
     public function call(string $method, $payload, int $flags = 0)
     {
-        return func_get_args();
+        if ($this->return instanceof Throwable) {
+            throw $this->return;
+        }
+
+        return $this->return;
     }
 
     /**
+     * @param array $return
      * @return static
      */
-    public static function create(): self
+    public static function create($return = null): self
     {
-        return new self(new Relay());
+        $rpc = new self(new Relay());
+        $rpc->return = $return;
+
+        return $rpc;
     }
 }
