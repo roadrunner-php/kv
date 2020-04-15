@@ -57,7 +57,3 @@ func (c StorageConfig) Unmarshal(out interface{}) error {
 	return nil
 }
 
-//============================= PRIVATE =============================================
-func(c StorageConfig) initStorages() {
-
-}

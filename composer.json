@@ -7,20 +7,40 @@
     {
       "name": "Wolfy-J",
       "email": "wolfy.jd@gmail.com"
+    },
+    {
+      "name": "48d90782"
+    },
+    {
+      "name": "vvval"
     }
   ],
   "require": {
     "php": "^7.2",
     "ext-json": "*",
-    "spiral/roadrunner": "^1.1"
+    "spiral/roadrunner": "^1.7"
   },
   "require-dev": {
-    "phpunit/phpunit": "~7.0",
+    "phpunit/phpunit": "^8.0",
     "spiral/core": "^1.0",
     "doctrine/inflector": "^1.3",
-    "spiral/code-style": "^1.0"
+    "spiral/code-style": "^1.0",
+    "roave/security-advisories": "dev-master"
   },
   "config": {
     "vendor-dir": "vendor_php"
+  },
+  "autoload": {
+    "psr-4": {
+      "Spiral\\KV\\": "src/"
+    },
+    "files": [
+      "src/functions.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Spiral\\KV\\Tests\\": "tests/KV/"
+    }
   }
 }
