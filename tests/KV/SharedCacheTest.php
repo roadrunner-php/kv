@@ -103,7 +103,7 @@ class SharedCacheTest extends TestCase
     }
 
     /**
-     * @dataProvider setProvider
+     * @dataProvider voidCallProvider
      * @param mixed $return
      * @param bool  $expectException
      * @throws SharedCacheException
@@ -122,18 +122,7 @@ class SharedCacheTest extends TestCase
     }
 
     /**
-     * @return iterable
-     */
-    public function setProvider(): iterable
-    {
-        return [
-            [new LogicException('RPC error'), true],
-            [null],
-        ];
-    }
-
-    /**
-     * @dataProvider mExpireProvider
+     * @dataProvider voidCallProvider
      * @param mixed $return
      * @param bool  $expectException
      * @throws SharedCacheException
@@ -146,17 +135,6 @@ class SharedCacheTest extends TestCase
         }
 
         $this->makeKV($return)->mExpire(new DateTime(), 'a', 'b');
-    }
-
-    /**
-     * @return iterable
-     */
-    public function mExpireProvider(): iterable
-    {
-        return [
-            [new LogicException('RPC error'), true],
-            [null],
-        ];
     }
 
     /**
@@ -205,14 +183,31 @@ class SharedCacheTest extends TestCase
         ];
     }
 
-    public function testDelete(): void
+    /**
+     * @dataProvider voidCallProvider
+     * @param mixed $return
+     * @param bool  $expectException
+     * @throws SharedCacheException
+     */
+    public function testDelete($return, bool $expectException = false): void
     {
         $this->assertTrue(true);
+        if ($expectException) {
+            $this->expectException(SharedCacheException::class);
+        }
+
+        $this->makeKV($return)->delete('a', 'b');
     }
 
-    public function testClose(): void
+    /**
+     * @return iterable
+     */
+    public function voidCallProvider(): iterable
     {
-        $this->assertTrue(true);
+        return [
+            [new LogicException('RPC error'), true],
+            [null],
+        ];
     }
 
     /**

@@ -67,11 +67,4 @@ interface SharedCacheInterface
      * @throws SharedCacheException
      */
     public function delete(string ...$keys): void;
-
-    /**
-     * Close the storage and underlying resources.
-     * @param string $driver
-     * @throws SharedCacheException
-     */
-    public function close(string $driver): void;
 }
