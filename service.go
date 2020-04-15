@@ -16,9 +16,8 @@ type Service struct {
 	Storages map[string]Storage
 	cfg      *StorageConfig
 
-	// server and server controller
+	// server
 	rr        *roadrunner.Server
-	cr        roadrunner.Controller
 	serving   int32
 	container service.Container
 

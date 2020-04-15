@@ -7,12 +7,18 @@
     {
       "name": "Wolfy-J",
       "email": "wolfy.jd@gmail.com"
+    },
+    {
+      "name": "48d90782"
+    },
+    {
+      "name": "vvval"
     }
   ],
   "require": {
     "php": "^7.2",
     "ext-json": "*",
-    "spiral/roadrunner": "^1.1"
+    "spiral/roadrunner": "^1.7"
   },
   "require-dev": {
     "phpunit/phpunit": "~7.0",
