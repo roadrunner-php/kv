@@ -191,6 +191,17 @@ class SharedCacheTest extends TestCase
                     'b' => DateTimeImmutable::createFromFormat(DATE_RFC3339, '2009-02-13T23:31:30+00:00')
                 ]
             ],
+            [
+                [
+                    'a' => 'not bool value',
+                    'b' => 1234567890.123,
+                    'c' => true
+                ],
+                [
+                    'a' => null,
+                    'b' => null
+                ]
+            ],
         ];
     }
 
