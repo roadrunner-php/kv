@@ -57,12 +57,12 @@ jobs:
 
       - name: Run golang tests
         run: |
-          docker-compose -f tests/docker-compose.yml up -d
+          docker-compose -f ./tests/docker-compose.yaml up -d
           composer update
-          go test -v -race -cover driver/boltdb     -coverprofile=boltdb.txt     -covermode=atomic
-          go test -v -race -cover driver/memcached  -coverprofile=memcached.txt  -covermode=atomic
-          go test -v -race -cover driver/redis      -coverprofile=redis.txt      -covermode=atomic
-          go test -v -race -cover driver/memory     -coverprofile=memory.txt     -covermode=atomic
+          go test -v -race -cover ./driver/boltdb     -coverprofile=boltdb.txt     -covermode=atomic
+          go test -v -race -cover ./driver/memcached  -coverprofile=memcached.txt  -covermode=atomic
+          go test -v -race -cover ./driver/redis      -coverprofile=redis.txt      -covermode=atomic
+          go test -v -race -cover ./driver/memory     -coverprofile=memory.txt     -covermode=atomic
       - name: Run code coverage
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
