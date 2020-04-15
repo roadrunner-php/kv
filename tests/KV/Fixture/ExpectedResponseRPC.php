@@ -7,7 +7,7 @@ namespace Spiral\KV\Tests\Fixture;
 use Spiral\Goridge\RPC as GoridgeRPC;
 use Throwable;
 
-class RPC extends GoridgeRPC
+class ExpectedResponseRPC extends GoridgeRPC
 {
     /** @var mixed */
     private $return;
@@ -31,7 +31,7 @@ class RPC extends GoridgeRPC
      */
     public static function create($return = null): self
     {
-        $rpc = new self(new Relay());
+        $rpc = new self(new NullRelay());
         $rpc->return = $return;
 
         return $rpc;

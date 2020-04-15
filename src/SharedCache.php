@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Spiral\KV;
 
+use DateTime;
 use DateTimeInterface;
 use Spiral\Goridge\RelayInterface as Relay;
 use Spiral\Goridge\RPC;
@@ -142,10 +143,14 @@ class SharedCache implements SharedCacheInterface
 
         $result = array_fill_keys($keys, null);
         foreach (arrayFetchKeys($response, $keys) as $key => $value) {
-            //todo convert to datetime
-//            if ((bool)$value) {
-//                $result[$key] = (bool)$value;
-//            }
+            if (is_string($value)) {
+                $ttl = DateTime::createFromFormat(DateTimeInterface::RFC3339, $value);
+                if ($ttl !== false) {
+                    $result[$key] = $ttl;
+                }
+            } elseif ($value instanceof DateTimeInterface) {
+                $result[$key] = $value;
+            }
         }
 
         return $result;

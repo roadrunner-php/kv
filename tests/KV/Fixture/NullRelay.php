@@ -6,7 +6,7 @@ namespace Spiral\KV\Tests\Fixture;
 
 use Spiral\Goridge\RelayInterface;
 
-class Relay implements RelayInterface
+class NullRelay implements RelayInterface
 {
     /**
      * @inheritDoc
