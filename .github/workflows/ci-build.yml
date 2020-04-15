@@ -55,8 +55,8 @@ jobs:
       - name: Validate composer.json and composer.lock
         run: composer validate
 
-      - name: Check code style
-        run: ./vendor_php/bin/spiral-cs check src tests
+#      - name: Check code style
+#        run: ./vendor_php/bin/spiral-cs check src tests
 
 
       - name: Install Go dependencies
