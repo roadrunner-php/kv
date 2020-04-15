@@ -49,7 +49,7 @@ class SharedCache implements SharedCacheInterface
 
         if (!is_array($response)) {
             throw new SharedCacheException(sprintf(
-                'Response expected to be an array, got %s.',
+                'Response expected to be an array, got %s',
                 gettype($response)
             ));
         }
@@ -87,7 +87,7 @@ class SharedCache implements SharedCacheInterface
 
         if (!is_array($response)) {
             throw new SharedCacheException(sprintf(
-                'Response expected to be an array, got %s.',
+                'Response expected to be an array, got %s',
                 gettype($response)
             ));
         }
@@ -136,7 +136,7 @@ class SharedCache implements SharedCacheInterface
 
         if (!is_array($response)) {
             throw new SharedCacheException(sprintf(
-                'Response expected to be an array, got %s.',
+                'Response expected to be an array, got %s',
                 gettype($response)
             ));
         }
@@ -164,16 +164,6 @@ class SharedCache implements SharedCacheInterface
         $this->call('Delete', [
             'driver' => $this->driver,
             'keys'   => $keys
-        ]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function close(string $driver): void
-    {
-        $this->call('Close', [
-            'driver' => $this->driver
         ]);
     }
 
