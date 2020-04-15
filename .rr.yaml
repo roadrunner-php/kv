@@ -1,0 +1,19 @@
+kv:
+  default: #local in-memory storage
+    enabled: true
+
+  boltdb:   # Persistent storage, only boltdb available
+    dir: "."
+    file: "rr.db"
+    bucket: "rr"
+    permissions: 777 # is used in boltdb
+    ttl: # default ttl for keys in seconds, zero means no TTL (if not set, defaults to 1 minute)
+
+  redis: # redis # 1. if a master name is passed a sentinel-backed FailoverClient will be returned 2. if the number of Addr is two or more, a ClusterClient will be returned 3. otherwise, a single-node redis Client will be returned.
+    addr: ["localhost:6379"] # if multiply addressed provided then automatically will be used redis pool client (no api change)
+    db: 0 # db number to use in redis
+    master: # empty by default, if specified - will be used failover client
+    password: "" # super strong default redis password (empty)
+
+  memcached: # can be redis or memcached
+    addr: ["localhost:11211"] # could be multiply nodes
