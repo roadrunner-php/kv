@@ -37,7 +37,8 @@ class SharedCacheTest extends TestCase
     public function hasProvider(): iterable
     {
         return [
-            [new LogicException(), ['a', 'b'], [], true],
+            [new LogicException('RPC error'), ['a', 'b'], [], true],
+            [null, ['a', 'b'], [], true],
             [['a' => '1st value', 'b' => false, 'c' => '?'], ['a', 'b'], ['a' => '1st value', 'b' => false]],
             [['b' => false, 'c' => null], ['a', 'b', 'c'], ['a' => false, 'b' => false, 'c' => null]],
         ];
