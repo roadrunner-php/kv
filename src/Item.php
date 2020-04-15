@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 namespace Spiral\KV;
 
-use DateTimeInterface;
+use DateTimeImmutable;
 
 class Item
 {
@@ -20,7 +20,7 @@ class Item
     /** @var mixed */
     public $value;
 
-    /** @var DateTimeInterface */
+    /** @var DateTimeImmutable */
     public $ttl;
 
     /**
@@ -40,10 +40,10 @@ class Item
     /**
      * @param string            $key
      * @param mixed             $value
-     * @param DateTimeInterface $ttl
+     * @param DateTimeImmutable $ttl
      * @return static
      */
-    public static function withTTL(string $key, $value, DateTimeInterface $ttl): self
+    public static function withTTL(string $key, $value, DateTimeImmutable $ttl): self
     {
         $item = new self();
         $item->key = $key;

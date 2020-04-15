@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Spiral\KV\Tests;
 
-use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
 use PHPUnit\Framework\TestCase;
 use Spiral\Core\Exception\LogicException;
@@ -117,7 +117,7 @@ class SharedCacheTest extends TestCase
 
         $this->makeKV($return)->set(
             Item::create('key', 1),
-            Item::withTTL('another key', 'value', new DateTime())
+            Item::withTTL('another key', 'value', new DateTimeImmutable())
         );
     }
 
@@ -134,7 +134,7 @@ class SharedCacheTest extends TestCase
             $this->expectException(SharedCacheException::class);
         }
 
-        $this->makeKV($return)->mExpire(new DateTime(), 'a', 'b');
+        $this->makeKV($return)->mExpire(new DateTimeImmutable(), 'a', 'b');
     }
 
     /**
@@ -172,12 +172,34 @@ class SharedCacheTest extends TestCase
             [
                 [
                     'a' => 'not bool value',
-                    'b' => DateTime::createFromFormat(DATE_RFC3339, '2020-04-15T12:00:27+00:20'),
+                    'b' => DateTimeImmutable::createFromFormat(DATE_RFC3339, '2020-04-15T12:00:27+00:20'),
                     'c' => true
                 ],
                 [
                     'a' => null,
-                    'b' => DateTime::createFromFormat(DATE_RFC3339, '2020-04-15T12:00:27+00:20')
+                    'b' => DateTimeImmutable::createFromFormat(DATE_RFC3339, '2020-04-15T12:00:27+00:20')
+                ]
+            ],
+            [
+                [
+                    'a' => 'not bool value',
+                    'b' => 1234567890,
+                    'c' => true
+                ],
+                [
+                    'a' => null,
+                    'b' => DateTimeImmutable::createFromFormat(DATE_RFC3339, '2009-02-13T23:31:30+00:00')
+                ]
+            ],
+            [
+                [
+                    'a' => 'not bool value',
+                    'b' => 1234567890.123,
+                    'c' => true
+                ],
+                [
+                    'a' => null,
+                    'b' => null
                 ]
             ],
         ];
