@@ -29,8 +29,8 @@ type Storage interface {
 	Get(ctx context.Context, key string) ([]byte, error)
 
 	// MGet loads content of multiple values
-	// TODO []interface{} -> map[string]interface{}
-	MGet(ctx context.Context, args ...string) ([]interface{}, error)
+	// If there are no values for keys, key will no be in the map
+	MGet(ctx context.Context, args ...string) (map[string]interface{}, error)
 
 	// Set used to upload item to KV with TTL
 	// 0 value in TTL means no TTL

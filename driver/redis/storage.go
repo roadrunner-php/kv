@@ -3,12 +3,13 @@ package redis
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redis/v7"
-	"github.com/sirupsen/logrus"
-	"github.com/spiral/kv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/go-redis/redis/v7"
+	"github.com/sirupsen/logrus"
+	"github.com/spiral/kv"
 )
 
 // Redis K/V storage.
@@ -109,7 +110,7 @@ func (s Storage) Get(ctx context.Context, key string) ([]byte, error) {
 // MGet loads content of multiple values (some values might be skipped).
 // https://redis.io/commands/mget
 // Returns slice with the interfaces with values
-func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error) {
+func (s Storage) MGet(ctx context.Context, keys ...string) (map[string]interface{}, error) {
 	if keys == nil {
 		return nil, kv.ErrNoKeys
 	}
@@ -122,12 +123,17 @@ func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error
 		}
 	}
 
-	slice := s.client.MGet(keys...)
-	res, err := slice.Result()
-	if err != nil {
-		return nil, err
+	m := make(map[string]interface{}, len(keys))
+
+	for _, k := range keys {
+		val, err := s.client.Get(k).Result()
+		if err != nil {
+			return nil, err
+		}
+		m[k] = val
 	}
-	return res, nil
+
+	return m, nil
 }
 
 // Set sets value with the TTL in seconds
