@@ -88,8 +88,6 @@ func (s Storage) Has(ctx context.Context, keys ...string) (map[string]bool, erro
 			return nil, err
 		}
 		switch exist {
-		case 0:
-			m[key] = false
 		case 1:
 			m[key] = true
 		}

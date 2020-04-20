@@ -83,8 +83,6 @@ func (s Storage) Has(ctx context.Context, keys ...string) (map[string]bool, erro
 
 		if _, ok := s.heap.Load(key); ok {
 			m[key] = true
-		} else {
-			m[key] = false
 		}
 	}
 

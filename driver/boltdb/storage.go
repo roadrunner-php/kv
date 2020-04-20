@@ -168,8 +168,6 @@ func (s Storage) Has(ctx context.Context, keys ...string) (map[string]bool, erro
 			exist := b.Get([]byte(key))
 			if exist != nil {
 				m[key] = true
-			} else {
-				m[key] = false
 			}
 		}
 		return nil
