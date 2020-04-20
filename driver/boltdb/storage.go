@@ -223,7 +223,7 @@ func (s Storage) Get(ctx context.Context, key string) ([]byte, error) {
 	return val, nil
 }
 
-func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error) {
+func (s Storage) MGet(ctx context.Context, keys ...string) (map[string]interface{}, error) {
 	// defence
 	if keys == nil {
 		return nil, kv.ErrNoKeys
@@ -237,7 +237,7 @@ func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error
 		}
 	}
 
-	m := make([]interface{}, 0, len(keys))
+	m := make(map[string]interface{}, len(keys))
 
 	err := s.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(s.bucket)
@@ -248,7 +248,7 @@ func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error
 		for _, key := range keys {
 			value := b.Get([]byte(key))
 			if value != nil {
-				m = append(m, value)
+				m[key] = value
 			}
 		}
 

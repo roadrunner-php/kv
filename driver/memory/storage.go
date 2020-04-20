@@ -106,7 +106,7 @@ func (s Storage) Get(ctx context.Context, key string) ([]byte, error) {
 	return nil, nil
 }
 
-func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error) {
+func (s Storage) MGet(ctx context.Context, keys ...string) (map[string]interface{}, error) {
 	if keys == nil {
 		return nil, kv.ErrNoKeys
 	}
@@ -119,11 +119,11 @@ func (s Storage) MGet(ctx context.Context, keys ...string) ([]interface{}, error
 		}
 	}
 
-	m := make([]interface{}, 0, len(keys))
+	m := make(map[string]interface{}, len(keys))
 
 	for _, key := range keys {
 		if value, ok := s.heap.Load(key); ok {
-			m = append(m, value)
+			m[key] = value
 		}
 	}
 
