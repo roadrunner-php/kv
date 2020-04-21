@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
-	"github.com/sirupsen/logrus"
-	"github.com/spiral/kv"
-	bolt "go.etcd.io/bbolt"
 	"os"
 	"path"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spiral/kv"
+	bolt "go.etcd.io/bbolt"
 )
 
 // BoltDB K/V storage.
@@ -282,30 +283,35 @@ func (s Storage) Set(ctx context.Context, items ...kv.Item) error {
 	}()
 
 	b := tx.Bucket(s.bucket)
-	for _, kvItem := range items {
+	for _, item := range items {
 		// performance note: pass a prepared bytes slice with initial cap
 		// we can't move buf and gob out of loop, because we need to clear both from data
 		// but gob will contain (w/o re-init) the past data
 		buf := bytes.Buffer{}
 		encoder := gob.NewEncoder(&buf)
-		if kvItem == kv.EmptyItem {
+		if item == kv.EmptyItem {
 			return kv.ErrEmptyItem
 		}
 
-		err = encoder.Encode(&kvItem)
+		err = encoder.Encode(&item)
 		if err != nil {
 			return err
 		}
 		// buf.Bytes will copy the underlying slice. Take a look in case of performance problems
-		err = b.Put([]byte(kvItem.Key), buf.Bytes())
+		err = b.Put([]byte(item.Key), buf.Bytes())
 		if err != nil {
 			return err
 		}
 
 		// if there are no errors, and TTL > 0,  we put the key with timeout to the hashmap, for future check
 		// we do not need mutex here, since we use sync.Map
-		if kvItem.TTL > 0 {
-			s.gc.Store(kvItem.Key, time.Unix(time.Now().Add(time.Second*time.Duration(kvItem.TTL)).Unix(), 0).Unix())
+		if item.TTL != "" {
+			// check correctness of provided TTL
+			_, err := time.Parse(time.RFC3339, item.TTL)
+			if err != nil {
+				return err
+			}
+			s.gc.Store(item.Key, item.TTL)
 		}
 
 		buf.Reset()
@@ -362,15 +368,20 @@ func (s Storage) Delete(ctx context.Context, keys ...string) error {
 
 // MExpire sets the expiration time to the key
 // If key already has the expiration time, it will be overwritten
-func (s Storage) MExpire(ctx context.Context, timeout int, keys ...string) error {
-	if timeout == 0 || keys == nil {
-		return errors.New("should set timeout and at least one key")
-	}
+func (s Storage) MExpire(ctx context.Context, items ...kv.Item) error {
+	for _, item := range items {
+		if item.TTL == "" || strings.TrimSpace(item.Key) == "" {
+			return errors.New("should set timeout and at least one key")
+		}
 
-	ut := time.Unix(time.Now().Add(time.Second*time.Duration(timeout)).Unix(), 0).Unix()
-	for _, key := range keys {
-		// if key exist, overwrite it value
-		s.gc.Store(key, ut)
+		// verify provided TTL
+		_, err := time.Parse(time.RFC3339, item.TTL)
+		if err != nil {
+			return err
+		}
+
+		s.gc.Store(item.Key, item.TTL)
+
 	}
 	return nil
 }
@@ -393,7 +404,7 @@ func (s Storage) TTL(ctx context.Context, keys ...string) (map[string]interface{
 	for _, key := range keys {
 		if item, ok := s.gc.Load(key); ok {
 			// a little bit dangerous operation, but user can't store value other that kv.Item.TTL --> int64
-			m[key] = item.(int64)
+			m[key] = item.(string)
 		}
 	}
 	return m, nil
@@ -417,9 +428,12 @@ func (s Storage) gcPhase() {
 			now := time.Now()
 			s.gc.Range(func(key, value interface{}) bool {
 				k := key.(string)
-				v := value.(int64)
+				v, err := time.Parse(time.RFC3339, value.(string))
+				if err != nil {
+					return false
+				}
 
-				if now.Unix() > time.Unix(v, 0).Unix() {
+				if now.After(v) {
 					// time expired
 					s.gc.Delete(k)
 					err := s.DB.Update(func(tx *bolt.Tx) error {

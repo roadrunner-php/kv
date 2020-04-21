@@ -132,44 +132,43 @@ func (s Storage) Set(ctx context.Context, items ...kv.Item) error {
 	if items == nil {
 		return kv.ErrNoKeys
 	}
-	for _, kvItem := range items {
-		if kvItem.TTL > 0 {
-			// heavy operation, but simple
-			s.heap.Store(kvItem.Key, kv.Item{
-				Key:   kvItem.Key,
-				Value: kvItem.Value,
-				TTL:   int(time.Unix(time.Now().Add(time.Second*time.Duration(kvItem.TTL)).Unix(), 0).Unix()),
-			})
-			continue
+
+	for _, item := range items {
+		// TTL is set
+		if item.TTL != "" {
+			// check the TTL in the item
+			_, err := time.Parse(time.RFC3339, item.TTL)
+			if err != nil {
+				return err
+			}
 		}
-		// heavy operation, but simple
-		s.heap.Store(kvItem.Key, kv.Item{
-			Key:   kvItem.Key,
-			Value: kvItem.Value,
-			TTL:   0,
-		})
+
+		s.heap.Store(item.Key, item)
 	}
 	return nil
 }
 
 // MExpire sets the expiration time to the key
 // If key already has the expiration time, it will be overwritten
-func (s Storage) MExpire(ctx context.Context, timeout int, keys ...string) error {
-	if timeout == 0 || keys == nil {
-		return errors.New("should set timeout and at least one key")
-	}
-
-	ut := time.Unix(time.Now().Add(time.Second*time.Duration(timeout)).Unix(), 0).Unix()
-	for _, key := range keys {
-		// if key exist, overwrite it value
-		if item, ok := s.heap.Load(key); ok {
-			kvItem := item.(kv.Item)
-			kvItem.TTL = int(ut)
-
-			s.heap.Store(key, kvItem)
+func (s Storage) MExpire(ctx context.Context, items ...kv.Item) error {
+	for _, item := range items {
+		if item.TTL == "" || strings.TrimSpace(item.Key) == "" {
+			return errors.New("should set timeout and at least one key")
 		}
 
+		// if key exist, overwrite it value
+		if _, ok := s.heap.Load(item.Key); ok {
+			// check that time is correct
+			_, err := time.Parse(time.RFC3339, item.TTL)
+			if err != nil {
+				return err
+			}
+			// guess that t is in the future
+			//item.TTL = t.String()
+			s.heap.Store(item.Key, item)
+		}
 	}
+
 	return nil
 }
 
@@ -226,7 +225,7 @@ func (s Storage) Close() error {
 
 func (s *Storage) gcPhase() {
 	// TODO check
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	for {
 		select {
 		case <-s.stop:
@@ -236,7 +235,16 @@ func (s *Storage) gcPhase() {
 			// check every second
 			s.heap.Range(func(key, value interface{}) bool {
 				v := value.(kv.Item)
-				if now.Unix() > time.Unix(int64(v.TTL), 0).Unix() {
+				if v.TTL == "" {
+					return true
+				}
+
+				t, err := time.Parse(time.RFC3339, v.TTL)
+				if err != nil {
+					return false
+				}
+
+				if now.After(t) {
 					s.heap.Delete(key)
 				}
 				return true

@@ -72,11 +72,12 @@ func TestNilAndWrongArgs(t *testing.T) {
 
 	assert.Error(t, s.Set(ctx, kv.Item{}))
 
-	assert.NoError(t, s.Set(ctx, kv.Item{
+	assert.Error(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "l",
 	}))
+
 	_, err = s.Has(ctx, "key")
 	assert.NoError(t, err)
 
@@ -110,7 +111,7 @@ func TestStorage_Set_Get_Delete(t *testing.T) {
 	assert.NoError(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "",
 	}))
 
 	v, err = s.Has(ctx, "key")
@@ -147,12 +148,12 @@ func TestStorage_Set_GetM(t *testing.T) {
 	assert.NoError(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "",
 	}, kv.Item{
 		Key:   "key2",
 		Value: "hello world",
-		TTL:   0,
-	}, ))
+		TTL:   "",
+	}))
 
 	res, err := s.MGet(ctx, "key", "key2")
 	assert.NoError(t, err)
@@ -178,23 +179,26 @@ func TestStorage_SetExpire_TTL(t *testing.T) {
 	assert.NoError(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "",
 	},
 		kv.Item{
 			Key:   "key2",
 			Value: "hello world",
-			TTL:   0,
+			TTL:   "",
 		}))
+
+	nowPlusFive := time.Now().Add(time.Second * 5).Format(time.RFC3339)
+
 	// set timeout to 5 sec
 	assert.NoError(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "value",
-		TTL:   5,
+		TTL:   nowPlusFive,
 	},
 		kv.Item{
 			Key:   "key2",
 			Value: "value",
-			TTL:   5,
+			TTL:   nowPlusFive,
 		}))
 
 	time.Sleep(time.Second * 2)
@@ -229,15 +233,27 @@ func TestStorage_MExpire_TTL(t *testing.T) {
 	assert.NoError(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "",
 	},
 		kv.Item{
 			Key:   "key2",
 			Value: "hello world",
-			TTL:   0,
+			TTL:   "",
 		}))
 	// set timeout to 5 sec
-	assert.NoError(t, s.MExpire(ctx, 5, "key", "key2"))
+	nowPlusFive := time.Now().Add(time.Second * 5).Format(time.RFC3339)
+
+	i1 := kv.Item{
+		Key:   "key",
+		Value: "",
+		TTL:   nowPlusFive,
+	}
+	i2 := kv.Item{
+		Key:   "key2",
+		Value: "",
+		TTL:   nowPlusFive,
+	}
+	assert.NoError(t, s.MExpire(ctx, i1, i2))
 
 	time.Sleep(time.Second * 2)
 	m, err := s.TTL(ctx, "key", "key2")
@@ -271,11 +287,11 @@ func TestConcurrentReadWriteTransactions(t *testing.T) {
 	assert.NoError(t, s.Set(ctx, kv.Item{
 		Key:   "key",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "",
 	}, kv.Item{
 		Key:   "key2",
 		Value: "hello world",
-		TTL:   0,
+		TTL:   "",
 	}))
 
 	v, err = s.Has(ctx, "key", "key2")
@@ -298,11 +314,11 @@ func TestConcurrentReadWriteTransactions(t *testing.T) {
 			assert.NoError(t, s.Set(ctx, kv.Item{
 				Key:   "key" + strconv.Itoa(i),
 				Value: "hello world" + strconv.Itoa(i),
-				TTL:   0,
+				TTL:   "",
 			}, kv.Item{
 				Key:   "key2" + strconv.Itoa(i),
 				Value: "hello world" + strconv.Itoa(i),
-				TTL:   0,
+				TTL:   "",
 			}))
 			m.Unlock()
 		}
@@ -326,7 +342,7 @@ func TestConcurrentReadWriteTransactions(t *testing.T) {
 		defer wg.Done()
 		for i := 0; i <= 1000; i++ {
 			m.Lock()
-			err = s.Delete(ctx, "key" + strconv.Itoa(i))
+			err = s.Delete(ctx, "key"+strconv.Itoa(i))
 			assert.NoError(t, err)
 			m.Unlock()
 		}

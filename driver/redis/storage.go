@@ -144,13 +144,26 @@ func (s Storage) Set(ctx context.Context, items ...kv.Item) error {
 	if items == nil {
 		return kv.ErrNoKeys
 	}
+	now := time.Now()
 	for _, item := range items {
 		if item == kv.EmptyItem {
 			return kv.ErrEmptyItem
 		}
-		err := s.client.Set(item.Key, item.Value, time.Second*time.Duration(item.TTL)).Err()
-		if err != nil {
-			return err
+
+		if item.TTL == "" {
+			err := s.client.Set(item.Key, item.Value, 0).Err()
+			if err != nil {
+				return err
+			}
+		} else {
+			t, err := time.Parse(time.RFC3339, item.TTL)
+			if err != nil {
+				return err
+			}
+			err = s.client.Set(item.Key, item.Value, t.Sub(now)).Err()
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -173,16 +186,24 @@ func (s Storage) Delete(ctx context.Context, keys ...string) error {
 }
 
 // https://redis.io/commands/expire
-// timeout in seconds
-func (s Storage) MExpire(ctx context.Context, timeout int, keys ...string) error {
-	if timeout == 0 || keys == nil {
-		return errors.New("should set timeout and at least one key")
-	}
+// timeout in RFC3339
+func (s Storage) MExpire(ctx context.Context, items ...kv.Item) error {
+	now := time.Now()
+	for _, item := range items {
+		if item.TTL == "" || strings.TrimSpace(item.Key) == "" {
+			return errors.New("should set timeout and at least one key")
+		}
 
-	t := time.Duration(timeout) * time.Second
+		t, err := time.Parse(time.RFC3339, item.TTL)
+		if err != nil {
+			return err
+		}
 
-	for _, key := range keys {
-		s.client.Expire(key, t)
+		// t guessed to be in future
+		// for Redis we use t.Sub, it will result in seconds, like 4.2s
+		tres := t.Sub(now)
+		s.client.Expire(item.Key, tres)
+
 	}
 
 	return nil
