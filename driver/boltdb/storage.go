@@ -282,6 +282,7 @@ func (s Storage) Set(ctx context.Context, items ...kv.Item) error {
 		}
 	}()
 
+	// TODO use flatbuffers here to fast encode and decode data
 	b := tx.Bucket(s.bucket)
 	for _, item := range items {
 		// performance note: pass a prepared bytes slice with initial cap
