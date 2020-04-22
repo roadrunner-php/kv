@@ -7,6 +7,7 @@ import (
 	"github.com/spiral/kv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Storage struct {
@@ -145,24 +146,34 @@ func (s Storage) Set(ctx context.Context, items ...kv.Item) error {
 		return kv.ErrNoKeys
 	}
 
-	for _, kvItem := range items {
-		if kvItem == kv.EmptyItem {
+	for _, item := range items {
+		if item == kv.EmptyItem {
 			return kv.ErrEmptyItem
 		}
-		// create an item
-		item := &memcache.Item{
-			Key: kvItem.Key,
+
+		// pre-allocate item
+		memcachedItem := &memcache.Item{
+			Key: item.Key,
 			// unsafe convert
-			Value:      []byte(kvItem.Value),
-			Flags:      0,
-			Expiration: int32(kvItem.TTL),
+			Value: []byte(item.Value),
+			Flags: 0,
 		}
 
-		// set the item
-		err := s.client.Set(item)
+		// add additional TTL in case of TTL isn't empty
+		if item.TTL != "" {
+			// verify the TTL
+			t, err := time.Parse(time.RFC3339, item.TTL)
+			if err != nil {
+				return err
+			}
+			memcachedItem.Expiration = int32(t.Unix())
+		}
+
+		err := s.client.Set(memcachedItem)
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil
@@ -171,23 +182,28 @@ func (s Storage) Set(ctx context.Context, items ...kv.Item) error {
 // Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (s Storage) MExpire(ctx context.Context, timeout int, keys ...string) error {
-	if timeout == 0 || keys == nil {
-		return kv.ErrEmptyKey
-	}
+func (s Storage) MExpire(ctx context.Context, items ...kv.Item) error {
+	for _, item := range items {
+		if item.TTL == "" || strings.TrimSpace(item.Key) == "" {
+			return errors.New("should set timeout and at least one key")
+		}
 
-	// Touch updates the expiry for the given key. The seconds parameter is either
-	// a Unix timestamp or, if seconds is less than 1 month, the number of seconds
-	// into the future at which time the item will expire. Zero means the item has
-	// no expiration time. ErrCacheMiss is returned if the key is not in the cache.
-	// The key must be at most 250 bytes in length.
-	for _, key := range keys {
-		err := s.client.Touch(key, int32(timeout))
+		// verify provided TTL
+		t, err := time.Parse(time.RFC3339, item.TTL)
+		if err != nil {
+			return err
+		}
+
+		// Touch updates the expiry for the given key. The seconds parameter is either
+		// a Unix timestamp or, if seconds is less than 1 month, the number of seconds
+		// into the future at which time the item will expire. Zero means the item has
+		// no expiration time. ErrCacheMiss is returned if the key is not in the cache.
+		// The key must be at most 250 bytes in length.
+		err = s.client.Touch(item.Key, int32(t.Unix()))
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 

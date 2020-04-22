@@ -23,4 +23,8 @@ class NullRelay implements RelayInterface
     {
         return null;
     }
+
+    public function sendPackage(string $headerPayload, ?int $headerFlags, string $bodyPayload, ?int $bodyFlags = null)
+    {
+    }
 }
