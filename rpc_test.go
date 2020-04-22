@@ -20,7 +20,7 @@ func TestSimple(t *testing.T) {
 	err = client.Call("kv.Has", Data{
 		Storage: "redis",
 		Keys:    []string{"1"},
-		Timeout: 0,
+		Timeout: "",
 	}, &res)
 	if err != nil {
 		panic(err)

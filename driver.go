@@ -22,14 +22,14 @@ type Item struct {
 // Storage represents single abstract storage.
 type Storage interface {
 	// Has checks if value exists.
-	Has(ctx context.Context, args ...string) (map[string]bool, error)
+	Has(ctx context.Context, keys ...string) (map[string]bool, error)
 
 	// Get loads value content into a byte slice.
 	Get(ctx context.Context, key string) ([]byte, error)
 
 	// MGet loads content of multiple values
 	// If there are no values for keys, key will no be in the map
-	MGet(ctx context.Context, args ...string) (map[string]interface{}, error)
+	MGet(ctx context.Context, keys ...string) (map[string]interface{}, error)
 
 	// Set used to upload item to KV with TTL
 	// 0 value in TTL means no TTL
@@ -43,7 +43,7 @@ type Storage interface {
 	TTL(ctx context.Context, keys ...string) (map[string]interface{}, error)
 
 	// Delete one or multiple keys.
-	Delete(ctx context.Context, args ...string) error
+	Delete(ctx context.Context, keys ...string) error
 
 	// Close closes the storage and underlying resources.
 	Close() error

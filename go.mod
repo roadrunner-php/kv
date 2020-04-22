@@ -10,4 +10,5 @@ require (
 	github.com/spiral/roadrunner v1.7.0
 	github.com/stretchr/testify v1.5.1
 	go.etcd.io/bbolt v1.3.4
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 )
