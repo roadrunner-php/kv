@@ -56,27 +56,6 @@ func (svc *Service) Init(cfg service.Config, log *logrus.Logger, env env.Environ
 }
 
 func (svc *Service) Serve() error {
-	//if svc.rr != nil {
-	//	if svc.env != nil {
-	//		if err := svc.env.Copy(svc.cfg.Workers); err != nil {
-	//			return err
-	//		}
-	//	}
-	//
-	//	// ensure that workers aware of running within jobs
-	//	svc.cfg.Workers.SetEnv("kv", "true")
-	//
-	//	if svc.cr != nil {
-	//		svc.rr.Attach(svc.cr)
-	//	}
-	//
-	//	if err := svc.rr.Start(); err != nil {
-	//		return err
-	//	}
-	//	defer svc.rr.Stop()
-	//
-	//}
-	//
 	atomic.StoreInt32(&svc.serving, 1)
 	defer atomic.StoreInt32(&svc.serving, 0)
 
