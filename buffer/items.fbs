@@ -1,0 +1,24 @@
+namespace data;
+
+table Data {
+    Storage:string;
+    Keys:[string];
+    Timeout:string;
+}
+
+root_type Data;
+
+table Item {
+    Key:string;
+    Value:string;
+    Timeout:string;
+}
+
+root_type Item;
+
+table SetData {
+    Items:[Item];
+    Storages:[string];
+}
+
+root_type SetData;
