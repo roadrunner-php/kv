@@ -61,7 +61,7 @@ jobs:
       - name: Install Go dependencies
         run: go mod download
 
-      - name: Run golang tests
+      - name: Run tests
         run: |
           docker-compose -f ./tests/docker-compose.yaml up -d
           composer update
