@@ -29,9 +29,7 @@ func (r *RpcServer) Has(in []byte, res *map[string]bool) error {
 		keys = append(keys, string(dataRoot.Keys(i)))
 	}
 
-	storage := string(dataRoot.Storage())
-
-	ret, err := r.svc.Storages[storage].Has(ctx, keys...)
+	ret, err := r.svc.Storages[string(dataRoot.Storage())].Has(ctx, keys...)
 	if err != nil {
 		return err
 	}
@@ -92,9 +90,7 @@ func (r *RpcServer) Get(in []byte, res *[]byte) error {
 	ctx := context.Background()
 	dataRoot := data.GetRootAsData(in, 0)
 
-	storage := string(dataRoot.Storage())
-
-	ret, err := r.svc.Storages[storage].Get(ctx, string(dataRoot.Keys(0)))
+	ret, err := r.svc.Storages[string(dataRoot.Storage())].Get(ctx, string(dataRoot.Keys(0)))
 	if err != nil {
 		return err
 	}
@@ -116,9 +112,7 @@ func (r *RpcServer) MGet(in []byte, res *map[string]interface{}) error {
 		keys = append(keys, string(dataRoot.Keys(i)))
 	}
 
-	storage := string(dataRoot.Storage())
-
-	ret, err := r.svc.Storages[storage].MGet(ctx, keys...)
+	ret, err := r.svc.Storages[string(dataRoot.Storage())].MGet(ctx, keys...)
 	if err != nil {
 		return err
 	}
@@ -168,9 +162,7 @@ func (r *RpcServer) TTL(in []byte, res *map[string]interface{}) error {
 		keys = append(keys, string(dataRoot.Keys(i)))
 	}
 
-	storage := string(dataRoot.Storage())
-
-	ret, err := r.svc.Storages[storage].TTL(ctx, keys...)
+	ret, err := r.svc.Storages[string(dataRoot.Storage())].TTL(ctx, keys...)
 	if err != nil {
 		return err
 	}
@@ -192,9 +184,7 @@ func (r *RpcServer) Delete(in []byte, ok *bool) error {
 		keys = append(keys, string(dataRoot.Keys(i)))
 	}
 
-	storage := string(dataRoot.Storage())
-
-	err := r.svc.Storages[storage].Delete(ctx, keys...)
+	err := r.svc.Storages[string(dataRoot.Storage())].Delete(ctx, keys...)
 	if err != nil {
 		return err
 	}
