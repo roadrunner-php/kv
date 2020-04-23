@@ -16,7 +16,7 @@
     }
   ],
   "scripts": {
-    "test": "phpunit",
+    "tests": "phpunit",
     "cs-fix": "spiral-cs fix src tests",
     "cs-check": "spiral-cs check src tests"
   },
