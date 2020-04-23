@@ -81,37 +81,138 @@ func (r *RpcServer) Set(in []byte, ok *bool) error {
 	return errg.Wait()
 }
 
-func (r *RpcServer) Get(in Data, res *[]byte) error {
-	println("has")
-	return nil
-}
+// in Data
+func (r *RpcServer) Get(in []byte, res *[]byte) error {
+	ctx := context.Background()
+	dataRoot := data.GetRootAsData(in, 0)
+	l := dataRoot.KeysLength()
+	keys := make([]string, 0, l)
 
-func (r *RpcServer) MGet(in Data, res *map[string]interface{}) error {
-	println("has")
+	for i := 0; i < l; i++ {
+		// TODO make unsafe fast convert
+		keys = append(keys, string(dataRoot.Keys(i)))
+	}
 
-	return nil
-}
+	storage := string(dataRoot.Storage())
 
-func (r *RpcServer) MExpire(in Data, ok *bool) error {
-	println("has")
-
-	return nil
-}
-
-func (r *RpcServer) TTL(in Data, ok *bool) error {
-	println("has")
-
-	return nil
-}
-
-func (r *RpcServer) Delete(in Data, ok *bool) error {
-	println("has")
+	ret, err := r.svc.Storages[storage].Get(ctx, keys[0])
+	if err != nil {
+		return err
+	}
+	// value by key
+	*res = ret
 
 	return nil
 }
 
-func (r *RpcServer) Close(in string, ok *bool) error {
-	println("has")
+// in Data
+func (r *RpcServer) MGet(in []byte, res *map[string]interface{}) error {
+	ctx := context.Background()
+	dataRoot := data.GetRootAsData(in, 0)
+	l := dataRoot.KeysLength()
+	keys := make([]string, 0, l)
+
+	for i := 0; i < l; i++ {
+		// TODO make unsafe fast convert
+		keys = append(keys, string(dataRoot.Keys(i)))
+	}
+
+	storage := string(dataRoot.Storage())
+
+	ret, err := r.svc.Storages[storage].MGet(ctx, keys...)
+	if err != nil {
+		return err
+	}
+	// return the map
+	*res = ret
+
+	return nil
+}
+
+// in Data
+func (r *RpcServer) MExpire(in []byte, ok *bool) error {
+	ctx := context.Background()
+	dataRoot := data.GetRootAsData(in, 0)
+	l := dataRoot.KeysLength()
+
+	// when unmarshalling the keys, simultaneously, fill up the slice with items
+	it := make([]Item, 0, l)
+
+	for i := 0; i < l; i++ {
+		it = append(it, Item{
+			Key: string(dataRoot.Keys(i)),
+			// we set up timeout on the keys, so, value here is redundant
+			Value: "",
+			TTL:   string(dataRoot.Timeout()),
+		})
+	}
+
+	err := r.svc.Storages[string(dataRoot.Storage())].MExpire(ctx, it...)
+	if err != nil {
+		return err
+	}
+	// return the map
+	*ok = true
+
+	return nil
+}
+
+// in Data
+func (r *RpcServer) TTL(in []byte, res *map[string]interface{}) error {
+	ctx := context.Background()
+	dataRoot := data.GetRootAsData(in, 0)
+	l := dataRoot.KeysLength()
+	keys := make([]string, 0, l)
+
+	for i := 0; i < l; i++ {
+		// TODO make unsafe fast convert
+		keys = append(keys, string(dataRoot.Keys(i)))
+	}
+
+	storage := string(dataRoot.Storage())
+
+	ret, err := r.svc.Storages[storage].TTL(ctx, keys...)
+	if err != nil {
+		return err
+	}
+	// return the map
+	*res = ret
+
+	return nil
+}
+
+// in Data
+func (r *RpcServer) Delete(in []byte, ok *bool) error {
+	ctx := context.Background()
+	dataRoot := data.GetRootAsData(in, 0)
+	l := dataRoot.KeysLength()
+	keys := make([]string, 0, l)
+
+	for i := 0; i < l; i++ {
+		// TODO make unsafe fast convert
+		keys = append(keys, string(dataRoot.Keys(i)))
+	}
+
+	storage := string(dataRoot.Storage())
+
+	err := r.svc.Storages[storage].Delete(ctx, keys...)
+	if err != nil {
+		return err
+	}
+	// return true
+	*ok = true
+
+	return nil
+}
+
+// in string, storages
+func (r *RpcServer) Close(storage string, ok *bool) error {
+	err := r.svc.Storages[storage].Close()
+	if err != nil {
+		return err
+	}
+	// return true
+	*ok = true
 
 	return nil
 }

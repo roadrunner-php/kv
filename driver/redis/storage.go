@@ -201,9 +201,7 @@ func (s Storage) MExpire(ctx context.Context, items ...kv.Item) error {
 
 		// t guessed to be in future
 		// for Redis we use t.Sub, it will result in seconds, like 4.2s
-		tres := t.Sub(now)
-		s.client.Expire(item.Key, tres)
-
+		s.client.Expire(item.Key, t.Sub(now))
 	}
 
 	return nil

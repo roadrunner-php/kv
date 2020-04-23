@@ -1,9 +1,9 @@
 namespace data;
 
 table Data {
-  Storage:string;
-  Keys:[string];
-  Timeout:string;
+    Storage:string;
+    Keys:[string];
+    Timeout:string;
 }
 
 root_type Data;

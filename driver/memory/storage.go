@@ -157,15 +157,21 @@ func (s Storage) MExpire(ctx context.Context, items ...kv.Item) error {
 		}
 
 		// if key exist, overwrite it value
-		if _, ok := s.heap.Load(item.Key); ok {
+		if pItem, ok := s.heap.Load(item.Key); ok {
 			// check that time is correct
 			_, err := time.Parse(time.RFC3339, item.TTL)
 			if err != nil {
 				return err
 			}
+			tmp := pItem.(kv.Item)
 			// guess that t is in the future
-			//item.TTL = t.String()
-			s.heap.Store(item.Key, item)
+			// in memory is just FOR TESTING PURPOSES
+			// LOGIC ISN'T IDEAL
+			s.heap.Store(item.Key, kv.Item{
+				Key:   item.Key,
+				Value: tmp.Value,
+				TTL:   item.TTL,
+			})
 		}
 	}
 
