@@ -51,6 +51,7 @@ func (r *RpcServer) Set(in []byte, ok *bool) error {
 	ctx := context.Background()
 	dataRoot := data.GetRootAsSetData(in, 0)
 
+	storages := make([]string, 0, dataRoot.StoragesLength())
 	items := make([]Item, 0, dataRoot.ItemsLength())
 	it := &data.Item{}
 	for i := 0; i < dataRoot.ItemsLength(); i++ {
@@ -64,13 +65,17 @@ func (r *RpcServer) Set(in []byte, ok *bool) error {
 			TTL:   string(it.Timeout()),
 		}
 
-		items[i] = itc
+		items = append(items, itc)
+	}
+
+	for i := 0; i < dataRoot.StoragesLength(); i++ {
+		storages = append(storages, string(dataRoot.Storages(i)))
 	}
 
 	errg := &errgroup.Group{}
-	for i := 0; i < dataRoot.StoragesLength(); i++ {
+	for _, storage := range storages {
 		errg.Go(func() error {
-			err := r.svc.Storages[string(dataRoot.Storages(i))].Set(ctx, items...)
+			err := r.svc.Storages[storage].Set(ctx, items...)
 			if err != nil {
 				return err
 			}
@@ -82,20 +87,14 @@ func (r *RpcServer) Set(in []byte, ok *bool) error {
 }
 
 // in Data
+// In GET we expect only 1 key
 func (r *RpcServer) Get(in []byte, res *[]byte) error {
 	ctx := context.Background()
 	dataRoot := data.GetRootAsData(in, 0)
-	l := dataRoot.KeysLength()
-	keys := make([]string, 0, l)
-
-	for i := 0; i < l; i++ {
-		// TODO make unsafe fast convert
-		keys = append(keys, string(dataRoot.Keys(i)))
-	}
 
 	storage := string(dataRoot.Storage())
 
-	ret, err := r.svc.Storages[storage].Get(ctx, keys[0])
+	ret, err := r.svc.Storages[storage].Get(ctx, string(dataRoot.Keys(0)))
 	if err != nil {
 		return err
 	}
