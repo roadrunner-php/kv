@@ -15,6 +15,11 @@
       "name": "vvval"
     }
   ],
+  "scripts": {
+    "tests": "phpunit",
+    "cs-fix": "spiral-cs fix src tests",
+    "cs-check": "spiral-cs check src tests"
+  },
   "require": {
     "php": "^7.2",
     "ext-json": "*",

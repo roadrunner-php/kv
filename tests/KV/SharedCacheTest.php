@@ -12,6 +12,7 @@ use Spiral\KV\Item;
 use Spiral\KV\SharedCache;
 use Spiral\KV\SharedCacheException;
 use Spiral\KV\Tests\Fixture\ExpectedResponseRPC;
+use stdClass;
 
 class SharedCacheTest extends TestCase
 {
@@ -67,7 +68,7 @@ class SharedCacheTest extends TestCase
     {
         yield [new LogicException('RPC error'), [], true];
 
-        $values = ['string', null, false, true, -3, 0, 1, 2.3, [], new \stdClass()];
+        $values = ['string', null, false, true, -3, 0, 1, 2.3, [], new stdClass()];
 
         foreach ($values as $value) {
             yield [$value, $value];
