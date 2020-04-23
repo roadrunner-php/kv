@@ -9,10 +9,10 @@ use DateTimeInterface;
 use PHPUnit\Framework\TestCase;
 use Spiral\Core\Exception\LogicException;
 use Spiral\KV\Item;
+use Spiral\KV\Packer;
 use Spiral\KV\SharedCache;
 use Spiral\KV\SharedCacheException;
 use Spiral\KV\Tests\Fixture\ExpectedResponseRPC;
-use stdClass;
 
 class SharedCacheTest extends TestCase
 {
@@ -48,52 +48,22 @@ class SharedCacheTest extends TestCase
     /**
      * @dataProvider getProvider
      * @param mixed $return
-     * @param mixed $expected
+     * @param array $expected
      * @param bool  $expectException
-     * @throws SharedCacheException
      */
-    public function testGet($return, $expected, bool $expectException = false): void
+    public function testGet($return, array $expected, bool $expectException = false): void
     {
         if ($expectException) {
             $this->expectException(SharedCacheException::class);
         }
 
-        $this->assertSame($expected, $this->makeKV($return)->get('key'));
+        $this->assertSame($expected, $this->makeKV($return)->get('a', 'b'));
     }
 
     /**
      * @return iterable
      */
     public function getProvider(): iterable
-    {
-        yield [new LogicException('RPC error'), [], true];
-
-        $values = ['string', null, false, true, -3, 0, 1, 2.3, [], new stdClass()];
-
-        foreach ($values as $value) {
-            yield [$value, $value];
-        }
-    }
-
-    /**
-     * @dataProvider mGetProvider
-     * @param mixed $return
-     * @param array $expected
-     * @param bool  $expectException
-     */
-    public function testMGet($return, array $expected, bool $expectException = false): void
-    {
-        if ($expectException) {
-            $this->expectException(SharedCacheException::class);
-        }
-
-        $this->assertSame($expected, $this->makeKV($return)->mGet('a', 'b'));
-    }
-
-    /**
-     * @return iterable
-     */
-    public function mGetProvider(): iterable
     {
         return [
             [new LogicException('RPC error'), [], true],
@@ -117,8 +87,8 @@ class SharedCacheTest extends TestCase
         }
 
         $this->makeKV($return)->set(
-            Item::create('key', 1),
-            Item::withTTL('another key', 'value', new DateTimeImmutable())
+            Item::create('key', 'value'),
+            Item::create('another key', 'value', new DateTimeImmutable())
         );
     }
 
@@ -128,14 +98,14 @@ class SharedCacheTest extends TestCase
      * @param bool  $expectException
      * @throws SharedCacheException
      */
-    public function testMExpire($return, bool $expectException = false): void
+    public function testExpire($return, bool $expectException = false): void
     {
         $this->assertTrue(true);
         if ($expectException) {
             $this->expectException(SharedCacheException::class);
         }
 
-        $this->makeKV($return)->mExpire(new DateTimeImmutable(), 'a', 'b');
+        $this->makeKV($return)->expire(Item::create('key', 'value'), Item::ttl('key2'));
     }
 
     /**
@@ -239,6 +209,6 @@ class SharedCacheTest extends TestCase
      */
     private function makeKV($return): SharedCache
     {
-        return new SharedCache(ExpectedResponseRPC::create($return), 'driver');
+        return new SharedCache(ExpectedResponseRPC::create($return), new Packer(), 'driver');
     }
 }

@@ -28,8 +28,8 @@ class Factory implements FactoryInterface
     /**
      * @inheritDoc
      */
-    public function create(string $driver): SharedCacheInterface
+    public function create(string $storage): SharedCacheInterface
     {
-        return new SharedCache($this->rpc, $driver);
+        return new SharedCache($this->rpc, new Packer(), $storage);
     }
 }

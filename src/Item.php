@@ -11,39 +11,27 @@ declare(strict_types=1);
 namespace Spiral\KV;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 
 class Item
 {
     /** @var string */
-    public $key = '';
+    private $key;
 
-    /** @var mixed */
-    public $value;
+    /** @var string */
+    private $value = '';
 
     /** @var DateTimeImmutable */
-    public $ttl;
+    private $ttl;
 
     /**
-     * @param string $key
-     * @param mixed  $value
+     * Create item with value and ttl.
+     * @param string                 $key
+     * @param string                 $value
+     * @param DateTimeImmutable|null $ttl
      * @return static
      */
-    public static function create(string $key, $value): self
-    {
-        $item = new self();
-        $item->key = $key;
-        $item->value = $value;
-
-        return $item;
-    }
-
-    /**
-     * @param string            $key
-     * @param mixed             $value
-     * @param DateTimeImmutable $ttl
-     * @return static
-     */
-    public static function withTTL(string $key, $value, DateTimeImmutable $ttl): self
+    public static function create(string $key, string $value, ?DateTimeImmutable $ttl = null): self
     {
         $item = new self();
         $item->key = $key;
@@ -51,5 +39,48 @@ class Item
         $item->ttl = $ttl;
 
         return $item;
+    }
+
+    /**
+     * Create item without value.
+     * @param string                 $key
+     * @param DateTimeImmutable|null $ttl
+     * @return static
+     */
+    public static function ttl(string $key, ?DateTimeImmutable $ttl = null): self
+    {
+        $item = new self();
+        $item->key = $key;
+        $item->ttl = $ttl;
+
+        return $item;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTTL(): string
+    {
+        if ($this->ttl instanceof DateTimeInterface) {
+            return $this->ttl->format(DATE_RFC3339);
+        }
+
+        return '';
     }
 }

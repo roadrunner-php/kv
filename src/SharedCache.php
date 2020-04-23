@@ -16,25 +16,27 @@ use Spiral\Goridge\RelayInterface as Relay;
 use Spiral\Goridge\RPC;
 use Throwable;
 
-class SharedCache implements SharedCacheInterface
+final class SharedCache implements SharedCacheInterface
 {
-    protected const PACK_FORMAT = 'P';
-    protected const RPC_METHOD  = 'kv';
-
     /** @var RPC */
     private $rpc;
 
+    /** @var Packer */
+    private $packer;
+
     /** @var string */
-    private $driver;
+    private $storage;
 
     /**
      * @param RPC    $rpc
-     * @param string $driver
+     * @param Packer $packer
+     * @param string $storage
      */
-    public function __construct(RPC $rpc, string $driver)
+    public function __construct(RPC $rpc, Packer $packer, string $storage)
     {
         $this->rpc = $rpc;
-        $this->driver = $driver;
+        $this->packer = $packer;
+        $this->storage = $storage;
     }
 
     /**
@@ -42,10 +44,7 @@ class SharedCache implements SharedCacheInterface
      */
     public function has(string ...$keys): array
     {
-        $response = $this->call('Has', [
-            'driver' => $this->driver,
-            'keys'   => $keys
-        ]);
+        $response = $this->call('Has', $this->packer->packKeys($this->storage, ...$keys));
 
         if (!is_array($response)) {
             throw new SharedCacheException(sprintf(
@@ -67,23 +66,9 @@ class SharedCache implements SharedCacheInterface
     /**
      * @inheritDoc
      */
-    public function get(string $key)
+    public function get(string ...$keys): array
     {
-        return $this->call('Get', [
-            'driver' => $this->driver,
-            'key'    => $key
-        ]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function mGet(string ...$keys): array
-    {
-        $response = $this->call('MGet', [
-            'driver' => $this->driver,
-            'keys'   => $keys
-        ]);
+        $response = $this->call('Get', $this->packer->packKeys($this->storage, ...$keys));
 
         if (!is_array($response)) {
             throw new SharedCacheException(sprintf(
@@ -100,28 +85,15 @@ class SharedCache implements SharedCacheInterface
      */
     public function set(Item ...$items): void
     {
-        $this->call('Set', [
-            'driver' => $this->driver,
-            'items'  => array_map(static function (Item $item): array {
-                return [
-                    'key'   => $item->key,
-                    'value' => $item->value,
-                    'ttl'   => $item->ttl ? $item->ttl->format(DATE_RFC3339) : null,
-                ];
-            }, $items)
-        ]);
+        $this->call('Set', $this->packer->packItems($this->storage, ...$items));
     }
 
     /**
      * @inheritDoc
      */
-    public function mExpire(DateTimeInterface $ttl, string ...$keys): void
+    public function expire(Item ...$items): void
     {
-        $this->call('MExpire', [
-            'driver' => $this->driver,
-            'keys'   => $keys,
-            'ttl'    => $ttl->format(DATE_RFC3339)
-        ]);
+        $this->call('Expire', $this->packer->packItemsTTL($this->storage, ...$items));
     }
 
     /**
@@ -129,10 +101,7 @@ class SharedCache implements SharedCacheInterface
      */
     public function ttl(string ...$keys): array
     {
-        $response = $this->call('TTL', [
-            'driver' => $this->driver,
-            'keys'   => $keys
-        ]);
+        $response = $this->call('TTL', $this->packer->packKeys($this->storage, ...$keys));
 
         if (!is_array($response)) {
             throw new SharedCacheException(sprintf(
@@ -166,26 +135,19 @@ class SharedCache implements SharedCacheInterface
      */
     public function delete(string ...$keys): void
     {
-        $this->call('Delete', [
-            'driver' => $this->driver,
-            'keys'   => $keys
-        ]);
+        $this->call('Delete', $this->packer->packKeys($this->storage, ...$keys));
     }
 
     /**
      * @param string $method
-     * @param array  $payload
+     * @param string $payload
      * @return mixed
      * @throws SharedCacheException
      */
-    private function call(string $method, array $payload)
+    private function call(string $method, string $payload)
     {
         try {
-            return $this->rpc->call(
-                static::RPC_METHOD . '.' . $method,
-                pack(static::PACK_FORMAT, $payload),
-                Relay::PAYLOAD_RAW
-            );
+            return $this->rpc->call("kv.$method", $payload, Relay::PAYLOAD_RAW);
         } catch (Throwable $e) {
             throw new SharedCacheException($e->getMessage(), $e->getCode(), $e);
         }
