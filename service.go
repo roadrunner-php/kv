@@ -1,12 +1,12 @@
 package kv
 
 import (
+	"sync/atomic"
+
 	"github.com/sirupsen/logrus"
-	"github.com/spiral/roadrunner"
 	"github.com/spiral/roadrunner/service"
 	"github.com/spiral/roadrunner/service/env"
 	"github.com/spiral/roadrunner/service/rpc"
-	"sync/atomic"
 )
 
 // ID defines public service name.
@@ -17,7 +17,6 @@ type Service struct {
 	cfg      *StorageConfig
 
 	// server
-	rr        *roadrunner.Server
 	serving   int32
 	container service.Container
 
@@ -41,15 +40,13 @@ func (svc *Service) Init(cfg service.Config, log *logrus.Logger, env env.Environ
 		}
 	}
 
-	svc.rr = roadrunner.NewServer(svc.cfg.Workers)
-
 	svc.container = service.NewContainer(log)
 	for name, s := range svc.Storages {
 		svc.container.Register(name, s)
 	}
 	err := svc.container.Init(svc.cfg)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	return true, nil
@@ -62,6 +59,10 @@ func (svc *Service) Serve() error {
 	return svc.container.Serve()
 }
 
-func (svc Service) Stop() {
-	println("stop")
+func (svc *Service) Stop() {
+	if atomic.LoadInt32(&svc.serving) == 0 {
+		return
+	}
+
+	svc.container.Stop()
 }

@@ -1,7 +1,6 @@
 package kv
 
 import (
-	"github.com/spiral/roadrunner"
 	"github.com/spiral/roadrunner/service"
 )
 
@@ -16,32 +15,14 @@ type StorageConfig struct {
 	// BoltDB configuration
 	BoltDB    map[string]interface{}
 
-	// Workers configures roadrunner server and worker busy.
-	Workers *roadrunner.ServerConfig
 	parent  service.Config
 }
 
 func (c *StorageConfig) Hydrate(cfg service.Config) error {
-	c.Workers = &roadrunner.ServerConfig{}
-	err := c.Workers.InitDefaults()
-	if err != nil {
-		return err
-	}
-
-	c.Workers.Command = "php psr-worker.php pipes"
-
 	if err := cfg.Unmarshal(c); err != nil {
 		return err
 	}
-
-	if c.Workers.Command != "" {
-		if err := c.Workers.Pool.Valid(); err != nil {
-			return c.Workers.Pool.Valid()
-		}
-	}
-
 	c.parent = cfg
-
 	return nil
 }
 
