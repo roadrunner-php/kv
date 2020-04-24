@@ -4,12 +4,6 @@ import (
 	"context"
 )
 
-// Driver provides the ability to init one or multiple storage partitions.
-type Driver interface {
-	// Init initialize storage based on provided arguments.
-	Init(StorageConfig) (Storage, error)
-}
-
 // Item represents general storage item
 type Item struct {
 	// Key of item

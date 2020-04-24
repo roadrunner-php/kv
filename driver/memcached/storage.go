@@ -32,15 +32,26 @@ func NewMemcachedClient(url string) kv.Storage {
 }
 
 // Init is used to copy config from driver via reflection
-func (s *Storage) Init(config *Config) (bool, error) {
-	if config == nil {
-		return false, kv.ErrNoConfig
-	}
-	s.cfg = config
-	return true, nil
+//func (s *Storage) Init(config *Config) (bool, error) {
+//	if config == nil {
+//		return false, kv.ErrNoConfig
+//	}
+//	s.cfg = config
+//	return true, nil
+//}
+
+func(s *Storage) Init(config *kv.Config) (Storage, error) {
+		if config == nil {
+			return *s, kv.ErrNoConfig
+		}
+
+
+
+		//s.cfg = config
+		return *s, nil
 }
 
-func (s Storage) Serve() error {
+func (s *Storage) Serve() error {
 	// init the wait group to prevent Serve to exit early, before RR called Stop
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -52,7 +63,7 @@ func (s Storage) Serve() error {
 	return nil
 }
 
-func (s Storage) Stop() {
+func (s *Storage) Stop() {
 	defer s.wg.Done()
 	err := s.Close()
 	if err != nil {

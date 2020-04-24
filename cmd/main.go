@@ -10,9 +10,9 @@ import (
 func main() {
 	rr.Container.Register(rpc.ID, &rpc.Service{})
 	rr.Container.Register(kv.ID, &kv.Service{
-		Storages: map[string]kv.Storage{
+		Drivers: map[string]kv.Driver{
 			//"redis":     &redis.Storage{},
-			"memory":    &memory.Storage{},
+			"memory": &memory.Driver{},
 			//"memcached": &memcached.Storage{},
 			//"boltdb":    &boltdb.Storage{},
 		},

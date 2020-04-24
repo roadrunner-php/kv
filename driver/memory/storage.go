@@ -3,10 +3,11 @@ package memory
 import (
 	"context"
 	"errors"
-	"github.com/spiral/kv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/spiral/kv"
 )
 
 type Storage struct {
@@ -14,7 +15,7 @@ type Storage struct {
 	stop chan struct{}
 
 	// config for RR integration
-	cfg *Config
+	//cfg *Config
 
 	// wait group is used to prevent Serve for early exit
 	// is used together with stop
@@ -33,41 +34,41 @@ func NewInMemoryStorage() kv.Storage {
 	return ttls
 }
 
-func (s *Storage) Init(config *Config) (bool, error) {
-	if config == nil {
-		return false, kv.ErrNoConfig
-	}
-	s.cfg = config
-	return true, nil
-}
+//func (s *Storage) Init(config *Config) (bool, error) {
+//	if config == nil {
+//		return false, kv.ErrNoConfig
+//	}
+//	s.cfg = config
+//	return true, nil
+//}
 
-func (s Storage) Serve() error {
-	if !s.cfg.Enabled {
-		return nil
-	}
+//func (s Storage) Serve() error {
+//	if !s.cfg.Enabled {
+//		return nil
+//	}
+//
+//	// init the wait group to prevent Serve to exit early, before RR called Stop
+//	wg := &sync.WaitGroup{}
+//	wg.Add(1)
+//
+//	// init in-memory
+//	s.heap = &sync.Map{}
+//	s.stop = make(chan struct{})
+//
+//	// start in-memory gc for kv
+//	go s.gcPhase()
+//
+//	wg.Wait()
+//	return nil
+//}
 
-	// init the wait group to prevent Serve to exit early, before RR called Stop
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-
-	// init in-memory
-	s.heap = &sync.Map{}
-	s.stop = make(chan struct{})
-
-	// start in-memory gc for kv
-	go s.gcPhase()
-
-	wg.Wait()
-	return nil
-}
-
-func (s Storage) Stop() {
-	defer s.wg.Done()
-	err := s.Close()
-	if err != nil {
-		s.cfg.log.Error("error during the stopping in-memory storage", err)
-	}
-}
+//func (s Storage) Stop() {
+//	defer s.wg.Done()
+//	err := s.Close()
+//	if err != nil {
+//		s.cfg.log.Error("error during the stopping in-memory storage", err)
+//	}
+//}
 
 func (s Storage) Has(ctx context.Context, keys ...string) (map[string]bool, error) {
 	if keys == nil {
