@@ -1,39 +1,41 @@
 package kv
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/spiral/roadrunner"
-	"github.com/spiral/roadrunner/service"
-	"github.com/spiral/roadrunner/service/env"
-	"github.com/spiral/roadrunner/service/rpc"
 	"sync/atomic"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spiral/roadrunner/service"
+	"github.com/spiral/roadrunner/service/rpc"
 )
 
 // ID defines public service name.
 const ID = "kv"
 
+// Driver provides the ability to init one or multiple storage partitions.
+type Driver interface {
+	// Init initialize storage based on provided arguments.
+	Init(Config) (Storage, error)
+}
+
 type Service struct {
+	Drivers  map[string]Driver
+	// key - storage
+	// value - implementation
 	Storages map[string]Storage
-	cfg      *StorageConfig
+	cfg      *Config
 
 	// server
-	rr        *roadrunner.Server
 	serving   int32
 	container service.Container
 
-	// environment, logger and listeners
-	env env.Environment
 	log *logrus.Logger
 }
 
-func (svc *Service) Init(cfg service.Config, log *logrus.Logger, env env.Environment, rpc *rpc.Service) (bool, error) {
-	svc.cfg = &StorageConfig{}
+func (svc *Service) Init(cfg service.Config, rpc *rpc.Service) (bool, error) {
+	svc.cfg = &Config{}
 	if err := svc.cfg.Hydrate(cfg); err != nil {
 		return false, err
 	}
-
-	svc.env = env
-	svc.log = log
 
 	if rpc != nil {
 		if err := rpc.Register(ID, &RpcServer{svc}); err != nil {
@@ -41,48 +43,39 @@ func (svc *Service) Init(cfg service.Config, log *logrus.Logger, env env.Environ
 		}
 	}
 
-	svc.rr = roadrunner.NewServer(svc.cfg.Workers)
-
-	svc.container = service.NewContainer(log)
-	for name, s := range svc.Storages {
-		svc.container.Register(name, s)
-	}
-	err := svc.container.Init(svc.cfg)
-	if err != nil {
-		panic(err)
-	}
-
 	return true, nil
 }
 
 func (svc *Service) Serve() error {
-	//if svc.rr != nil {
-	//	if svc.env != nil {
-	//		if err := svc.env.Copy(svc.cfg.Workers); err != nil {
-	//			return err
-	//		}
-	//	}
-	//
-	//	// ensure that workers aware of running within jobs
-	//	svc.cfg.Workers.SetEnv("kv", "true")
-	//
-	//	if svc.cr != nil {
-	//		svc.rr.Attach(svc.cr)
-	//	}
-	//
-	//	if err := svc.rr.Start(); err != nil {
-	//		return err
-	//	}
-	//	defer svc.rr.Stop()
-	//
-	//}
-	//
+	for k, v := range *svc.cfg {
+		switch v.(map[string]interface{})["driver"] {
+		case "default":
+			str, err := svc.Drivers[k].Init(v.(map[string]interface{}))
+			if err != nil {
+				return err
+			}
+
+			svc.Storages[k] = str
+
+			println("default")
+		}
+
+
+
+
+
+	}
+
 	atomic.StoreInt32(&svc.serving, 1)
 	defer atomic.StoreInt32(&svc.serving, 0)
 
-	return svc.container.Serve()
+	return nil
 }
 
-func (svc Service) Stop() {
-	println("stop")
+func (svc *Service) Stop() {
+	if atomic.LoadInt32(&svc.serving) == 0 {
+		return
+	}
+
+	//for storages invoke stop
 }

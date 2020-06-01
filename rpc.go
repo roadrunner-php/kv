@@ -3,30 +3,32 @@ package kv
 import (
 	"context"
 
-	"github.com/spiral/kv/buffer/data"
-	"golang.org/x/sync/errgroup"
+	"github.com/spiral/kv/payload/generated"
 )
 
 type RpcServer struct {
 	svc *Service
 }
 
-type Data struct {
-	Storage string   `json:"storage"`
-	Keys    []string `json:"keys"`
-	Timeout string   `json:"timeout"`
+type Payload struct {
+	Storage string
+	Items   []Item
 }
 
 // data Data
 func (r *RpcServer) Has(in []byte, res *map[string]bool) error {
 	ctx := context.Background()
-	dataRoot := data.GetRootAsData(in, 0)
-	l := dataRoot.KeysLength()
+	dataRoot := generated.GetRootAsPayload(in, 0)
+	l := dataRoot.ItemsLength()
 	keys := make([]string, 0, l)
 
+	tmpItem := &generated.Item{}
+
 	for i := 0; i < l; i++ {
-		// TODO make unsafe fast convert
-		keys = append(keys, string(dataRoot.Keys(i)))
+		if !dataRoot.Items(tmpItem, i) {
+			continue
+		}
+		keys = append(keys, string(tmpItem.Key()))
 	}
 
 	ret, err := r.svc.Storages[string(dataRoot.Storage())].Has(ctx, keys...)
@@ -39,77 +41,49 @@ func (r *RpcServer) Has(in []byte, res *map[string]bool) error {
 	return nil
 }
 
-type SetData struct {
-	Items    []Item   `json:"items"`
-	Storages []string `json:"storages"`
-}
-
 // in SetData
 func (r *RpcServer) Set(in []byte, ok *bool) error {
 	ctx := context.Background()
-	dataRoot := data.GetRootAsSetData(in, 0)
+	dataRoot := generated.GetRootAsPayload(in, 0)
 
-	storages := make([]string, 0, dataRoot.StoragesLength())
+	l := dataRoot.ItemsLength()
 	items := make([]Item, 0, dataRoot.ItemsLength())
-	it := &data.Item{}
-	for i := 0; i < dataRoot.ItemsLength(); i++ {
-		if !dataRoot.Items(it, i) {
+	tmpItem := &generated.Item{}
+	for i := 0; i < l; i++ {
+		if !dataRoot.Items(tmpItem, i) {
 			continue
 		}
 
 		itc := Item{
-			Key:   string(it.Key()),
-			Value: string(it.Value()),
-			TTL:   string(it.Timeout()),
+			Key:   string(tmpItem.Key()),
+			Value: string(tmpItem.Value()),
+			TTL:   string(tmpItem.Timeout()),
 		}
 
 		items = append(items, itc)
 	}
 
-	for i := 0; i < dataRoot.StoragesLength(); i++ {
-		storages = append(storages, string(dataRoot.Storages(i)))
-	}
-
-	errg := &errgroup.Group{}
-	for _, storage := range storages {
-		errg.Go(func() error {
-			err := r.svc.Storages[storage].Set(ctx, items...)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-
-	return errg.Wait()
-}
-
-// in Data
-// In GET we expect only 1 key
-func (r *RpcServer) Get(in []byte, res *[]byte) error {
-	ctx := context.Background()
-	dataRoot := data.GetRootAsData(in, 0)
-
-	ret, err := r.svc.Storages[string(dataRoot.Storage())].Get(ctx, string(dataRoot.Keys(0)))
+	err := r.svc.Storages[string(dataRoot.Storage())].Set(ctx, items...)
 	if err != nil {
 		return err
 	}
-	// value by key
-	*res = ret
-
 	return nil
+
 }
 
 // in Data
 func (r *RpcServer) MGet(in []byte, res *map[string]interface{}) error {
 	ctx := context.Background()
-	dataRoot := data.GetRootAsData(in, 0)
-	l := dataRoot.KeysLength()
+	dataRoot := generated.GetRootAsPayload(in, 0)
+	l := dataRoot.ItemsLength()
 	keys := make([]string, 0, l)
+	tmpItem := &generated.Item{}
 
 	for i := 0; i < l; i++ {
-		// TODO make unsafe fast convert
-		keys = append(keys, string(dataRoot.Keys(i)))
+		if !dataRoot.Items(tmpItem, i) {
+			continue
+		}
+		keys = append(keys, string(tmpItem.Key()))
 	}
 
 	ret, err := r.svc.Storages[string(dataRoot.Storage())].MGet(ctx, keys...)
@@ -125,26 +99,32 @@ func (r *RpcServer) MGet(in []byte, res *map[string]interface{}) error {
 // in Data
 func (r *RpcServer) MExpire(in []byte, ok *bool) error {
 	ctx := context.Background()
-	dataRoot := data.GetRootAsData(in, 0)
-	l := dataRoot.KeysLength()
+	dataRoot := generated.GetRootAsPayload(in, 0)
+	l := dataRoot.ItemsLength()
 
 	// when unmarshalling the keys, simultaneously, fill up the slice with items
-	it := make([]Item, 0, l)
-
+	items := make([]Item, 0, l)
+	tmpItem := &generated.Item{}
 	for i := 0; i < l; i++ {
-		it = append(it, Item{
-			Key: string(dataRoot.Keys(i)),
+		if !dataRoot.Items(tmpItem, i) {
+			continue
+		}
+
+		itc := Item{
+			Key: string(tmpItem.Key()),
 			// we set up timeout on the keys, so, value here is redundant
 			Value: "",
-			TTL:   string(dataRoot.Timeout()),
-		})
+			TTL:   string(tmpItem.Timeout()),
+		}
+
+		items = append(items, itc)
 	}
 
-	err := r.svc.Storages[string(dataRoot.Storage())].MExpire(ctx, it...)
+	err := r.svc.Storages[string(dataRoot.Storage())].MExpire(ctx, items...)
 	if err != nil {
 		return err
 	}
-	// return the map
+	// return the result
 	*ok = true
 
 	return nil
@@ -153,13 +133,16 @@ func (r *RpcServer) MExpire(in []byte, ok *bool) error {
 // in Data
 func (r *RpcServer) TTL(in []byte, res *map[string]interface{}) error {
 	ctx := context.Background()
-	dataRoot := data.GetRootAsData(in, 0)
-	l := dataRoot.KeysLength()
+	dataRoot := generated.GetRootAsPayload(in, 0)
+	l := dataRoot.ItemsLength()
 	keys := make([]string, 0, l)
+	tmpItem := &generated.Item{}
 
 	for i := 0; i < l; i++ {
-		// TODO make unsafe fast convert
-		keys = append(keys, string(dataRoot.Keys(i)))
+		if !dataRoot.Items(tmpItem, i) {
+			continue
+		}
+		keys = append(keys, string(tmpItem.Key()))
 	}
 
 	ret, err := r.svc.Storages[string(dataRoot.Storage())].TTL(ctx, keys...)
@@ -175,13 +158,16 @@ func (r *RpcServer) TTL(in []byte, res *map[string]interface{}) error {
 // in Data
 func (r *RpcServer) Delete(in []byte, ok *bool) error {
 	ctx := context.Background()
-	dataRoot := data.GetRootAsData(in, 0)
-	l := dataRoot.KeysLength()
+	dataRoot := generated.GetRootAsPayload(in, 0)
+	l := dataRoot.ItemsLength()
 	keys := make([]string, 0, l)
+	tmpItem := &generated.Item{}
 
 	for i := 0; i < l; i++ {
-		// TODO make unsafe fast convert
-		keys = append(keys, string(dataRoot.Keys(i)))
+		if !dataRoot.Items(tmpItem, i) {
+			continue
+		}
+		keys = append(keys, string(tmpItem.Key()))
 	}
 
 	err := r.svc.Storages[string(dataRoot.Storage())].Delete(ctx, keys...)

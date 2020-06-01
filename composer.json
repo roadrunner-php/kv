@@ -23,7 +23,8 @@
   "require": {
     "php": "^7.2",
     "ext-json": "*",
-    "spiral/roadrunner": "^1.7"
+    "spiral/roadrunner": "^1.7",
+    "google/flatbuffers": "^1.12"
   },
   "require-dev": {
     "phpunit/phpunit": "^8.0",
@@ -37,7 +38,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Spiral\\KV\\": "src/"
+      "Spiral\\KV\\": "src/",
+      "generated\\": "payload/generated/"
     },
     "files": [
       "src/functions.php"

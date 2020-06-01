@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/spiral/kv"
-	"github.com/spiral/kv/driver/redis"
+	"github.com/spiral/kv/driver/memory"
 	rr "github.com/spiral/roadrunner/cmd/rr/cmd"
 	"github.com/spiral/roadrunner/service/rpc"
 )
@@ -10,9 +10,9 @@ import (
 func main() {
 	rr.Container.Register(rpc.ID, &rpc.Service{})
 	rr.Container.Register(kv.ID, &kv.Service{
-		Storages: map[string]kv.Storage{
-			"redis":     &redis.Storage{},
-			//"memory":    &memory.Storage{},
+		Drivers: map[string]kv.Driver{
+			//"redis":     &redis.Storage{},
+			"memory": &memory.Driver{},
 			//"memcached": &memcached.Storage{},
 			//"boltdb":    &boltdb.Storage{},
 		},

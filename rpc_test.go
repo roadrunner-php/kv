@@ -8,67 +8,22 @@ import (
 
 	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/spiral/goridge/v2"
-	"github.com/spiral/kv/buffer/data"
+	"github.com/spiral/kv/payload/generated"
 	"github.com/stretchr/testify/assert"
 )
 
-func makeData(b *flatbuffers.Builder, storage string, keys []string, timeout string) []byte {
+func makePayload(b *flatbuffers.Builder, storage string, items []Item) []byte {
 	b.Reset()
-
-	offset := make([]flatbuffers.UOffsetT, len(keys))
-
-	for i := len(keys) - 1; i >= 0; i-- {
-		offset[i] = b.CreateString(keys[i])
-	}
-
-	data.SetDataStartItemsVector(b, len(offset))
-
-	for i := len(offset) - 1; i >= 0; i-- {
-		b.PrependUOffsetT(offset[i])
-	}
-
-	x := b.EndVector(len(offset))
 
 	storageOffset := b.CreateString(storage)
-	timeoutOffset := b.CreateString(timeout)
-
-	data.DataStart(b)
-
-	data.DataAddStorage(b, storageOffset)
-	data.DataAddTimeout(b, timeoutOffset)
-	data.DataAddKeys(b, x)
-
-	dataOffset := data.DataEnd(b)
-	b.Finish(dataOffset)
-
-	return b.Bytes[b.Head():]
-}
-
-func makeSetData(b *flatbuffers.Builder, storages []string, items []Item) []byte {
-	b.Reset()
-
-	offset := make([]flatbuffers.UOffsetT, len(storages))
-
-	///////////////////////// STORAGES VECTOR ///////////////////////----
-	for i := len(storages) - 1; i >= 0; i-- {
-		offset[i] = b.CreateString(storages[i])
-	}
-
-	data.SetDataStartItemsVector(b, len(offset))
-
-	for i := len(offset) - 1; i >= 0; i-- {
-		b.PrependUOffsetT(offset[i])
-	}
-
-	storagesOffset := b.EndVector(len(offset))
 
 	////////////////////// ITEMS VECTOR ////////////////////////////
-	offset = make([]flatbuffers.UOffsetT, len(items))
+	offset := make([]flatbuffers.UOffsetT, len(items))
 	for i := len(items) - 1; i >= 0; i-- {
 		offset[i] = serializeItems(b, items[i])
 	}
 
-	data.SetDataStartItemsVector(b, len(offset))
+	generated.PayloadStartItemsVector(b, len(offset))
 
 	for i := len(offset) - 1; i >= 0; i-- {
 		b.PrependUOffsetT(offset[i])
@@ -77,11 +32,11 @@ func makeSetData(b *flatbuffers.Builder, storages []string, items []Item) []byte
 	itemsOffset := b.EndVector(len(offset))
 	///////////////////////////////////////////////////////////////////
 
-	data.SetDataStart(b)
-	data.SetDataAddStorages(b, storagesOffset)
-	data.SetDataAddItems(b, itemsOffset)
+	generated.PayloadStart(b)
+	generated.PayloadAddItems(b, itemsOffset)
+	generated.PayloadAddStorage(b, storageOffset)
 
-	finalOffset := data.SetDataEnd(b)
+	finalOffset := generated.PayloadEnd(b)
 
 	b.Finish(finalOffset)
 
@@ -93,13 +48,13 @@ func serializeItems(b *flatbuffers.Builder, item Item) flatbuffers.UOffsetT {
 	val := b.CreateString(item.Value)
 	ttl := b.CreateString(item.TTL)
 
-	data.ItemStart(b)
+	generated.ItemStart(b)
 
-	data.ItemAddKey(b, key)
-	data.ItemAddValue(b, val)
-	data.ItemAddTimeout(b, ttl)
+	generated.ItemAddKey(b, key)
+	generated.ItemAddValue(b, val)
+	generated.ItemAddTimeout(b, ttl)
 
-	return data.ItemEnd(b)
+	return generated.ItemEnd(b)
 }
 
 func TestSimple(t *testing.T) {
@@ -112,7 +67,11 @@ func TestSimple(t *testing.T) {
 
 	b := flatbuffers.NewBuilder(100)
 	res := make(map[string]bool)
-	d := makeData(b, "redis", []string{"key", "key2"}, "")
+	d := makePayload(b, "redis", []Item{{
+		Key:   "key",
+		Value: "",
+		TTL:   "",
+	}})
 
 	err = client.Call("kv.Has", d, &res)
 	if err != nil {
@@ -130,7 +89,9 @@ func TestRpcServer_Get(t *testing.T) {
 
 	b := flatbuffers.NewBuilder(100)
 	res := make(map[string]bool)
-	d := makeData(b, "redis", []string{"key"}, "")
+	d := makePayload(b, "redis", []Item{{
+		Key: "key",
+	}})
 
 	err = client.Call("kv.Get", d, &res)
 	if err != nil {
@@ -148,7 +109,9 @@ func TestRpcServer_Delete(t *testing.T) {
 
 	b := flatbuffers.NewBuilder(100)
 	res := make(map[string]bool)
-	d := makeData(b, "redis", []string{"key"}, "")
+	d := makePayload(b, "redis", []Item{{
+		Key: "key",
+	}})
 
 	err = client.Call("kv.Delete", d, &res)
 	if err != nil {
@@ -166,7 +129,11 @@ func TestRpcServer_MExpire(t *testing.T) {
 
 	b := flatbuffers.NewBuilder(100)
 	res := false
-	d := makeData(b, "redis", []string{"key"}, time.Now().Add(time.Second*6).Format(time.RFC3339))
+	d := makePayload(b, "redis", []Item{{
+		Key:   "key",
+		Value: "value",
+		TTL:   time.Now().Add(time.Second * 5).Format(time.RFC3339),
+	}})
 
 	err = client.Call("kv.MExpire", d, &res)
 	assert.NoError(t, err)
@@ -183,7 +150,10 @@ func TestRpcServer_TTL(t *testing.T) {
 
 	b := flatbuffers.NewBuilder(100)
 	res := make(map[string]interface{})
-	d := makeData(b, "redis", []string{"key"}, "")
+	d := makePayload(b, "redis", []Item{{
+		Key: "key",
+		TTL: time.Now().Add(time.Second * 5).Format(time.RFC3339),
+	}})
 
 	err = client.Call("kv.TTL", d, &res)
 	assert.NoError(t, err)
@@ -199,13 +169,11 @@ func TestRpcServer_Set(t *testing.T) {
 
 	b := flatbuffers.NewBuilder(100)
 	res := false
-	d := makeSetData(b, []string{"redis", "default"}, []Item{
-		{
-			Key:   "key",
-			Value: "value",
-			TTL:   time.Now().Add(time.Second * 5).Format(time.RFC3339),
-		},
-	})
+	d := makePayload(b, "redis", []Item{{
+		Key:   "key",
+		Value: "value",
+		TTL:   time.Now().Add(time.Second * 5).Format(time.RFC3339),
+	}})
 
 	err = client.Call("kv.Set", d, &res)
 	assert.NoError(t, err)
