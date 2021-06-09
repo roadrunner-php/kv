@@ -1,35 +1,44 @@
 <?php
 
 /**
- * Spiral Framework, SpiralScout LLC.
+ * This file is part of RoadRunner package.
  *
- * @author Valentin Vintsukevich (vvval)
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
 
 namespace Spiral\KV;
 
-use Spiral\Goridge\RPC;
+use Spiral\Goridge\RPC\RPCInterface;
+use Spiral\KV\Internal\Packer;
 
 class Factory implements FactoryInterface
 {
-    /** @var RPC */
-    private $rpc;
+    /**
+     * @var RPCInterface
+     */
+    private RPCInterface $rpc;
 
     /**
-     * @param RPC $rpc
+     * @param RPCInterface $rpc
      */
-    public function __construct(RPC $rpc)
+    public function __construct(RPCInterface $rpc)
     {
         $this->rpc = $rpc;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function create(string $storage): SharedCacheInterface
+    public function isAvailable(): bool
     {
-        return new SharedCache($this->rpc, new Packer(), $storage);
+        dd($this->rpc->call('informer.List', ''));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function create(string $storage): CacheInterface
+    {
+        return new Cache($this->rpc, new Packer(), $storage);
     }
 }

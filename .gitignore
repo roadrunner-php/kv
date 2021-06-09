@@ -16,6 +16,6 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .idea
-psr-worker.php
+test.php
 composer.lock
-vendor_php
+vendor

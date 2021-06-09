@@ -10,28 +10,32 @@ declare(strict_types=1);
 
 namespace Spiral\KV;
 
-use DateTimeImmutable;
-use DateTimeInterface;
-
 class Item
 {
-    /** @var string */
-    private $key;
+    /**
+     * @var string
+     */
+    private string $key;
 
-    /** @var string */
-    private $value = '';
+    /**
+     * @var string
+     */
+    private string $value = '';
 
-    /** @var DateTimeImmutable */
-    private $ttl;
+    /**
+     * @var \DateTimeInterface
+     */
+    private \DateTimeInterface $ttl;
 
     /**
      * Create item with value and ttl.
+     *
      * @param string                 $key
      * @param string                 $value
-     * @param DateTimeImmutable|null $ttl
+     * @param \DateTimeInterface|null $ttl
      * @return static
      */
-    public static function create(string $key, string $value, ?DateTimeImmutable $ttl = null): self
+    public static function create(string $key, string $value, ?\DateTimeInterface $ttl = null): self
     {
         $item = new self();
         $item->key = $key;
@@ -43,11 +47,12 @@ class Item
 
     /**
      * Create item without value.
+     *
      * @param string                 $key
-     * @param DateTimeImmutable|null $ttl
+     * @param \DateTimeInterface|null $ttl
      * @return static
      */
-    public static function ttl(string $key, ?DateTimeImmutable $ttl = null): self
+    public static function ttl(string $key, ?\DateTimeInterface $ttl = null): self
     {
         $item = new self();
         $item->key = $key;
@@ -77,7 +82,7 @@ class Item
      */
     public function getTTL(): string
     {
-        if ($this->ttl instanceof DateTimeInterface) {
+        if ($this->ttl instanceof \DateTimeInterface) {
             return $this->ttl->format(DATE_RFC3339);
         }
 

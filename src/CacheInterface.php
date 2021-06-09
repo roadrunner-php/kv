@@ -10,8 +10,6 @@ declare(strict_types=1);
 
 namespace Spiral\KV;
 
-use Exception;
-
-class SharedCacheException extends Exception
+interface CacheInterface
 {
 }

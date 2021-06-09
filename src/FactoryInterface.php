@@ -13,9 +13,15 @@ namespace Spiral\KV;
 interface FactoryInterface
 {
     /**
-     * Create a shared cache storage.
-     * @param string $storage
-     * @return SharedCacheInterface
+     * @return bool
      */
-    public function create(string $storage): SharedCacheInterface;
+    public function isAvailable(): bool;
+
+    /**
+     * Create a shared cache storage.
+     *
+     * @param string $storage
+     * @return CacheInterface
+     */
+    public function create(string $storage): CacheInterface;
 }
