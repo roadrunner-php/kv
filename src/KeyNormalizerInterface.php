@@ -9,8 +9,13 @@
 
 declare(strict_types=1);
 
-namespace Spiral\RoadRunner\KeyValue\Exception;
+namespace Spiral\RoadRunner\KeyValue;
 
-class KeyValueException extends \Exception
+interface KeyNormalizerInterface
 {
+    /**
+     * @param string $key
+     * @return string
+     */
+    public function normalize(string $key): string;
 }

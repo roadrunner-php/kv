@@ -8,7 +8,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\KV\Exception;
+namespace Spiral\RoadRunner\KeyValue\Exception;
 
 class StorageException extends KeyValueException
 {

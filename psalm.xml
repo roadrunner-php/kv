@@ -9,6 +9,7 @@
     <issueHandlers>
         <RedundantConditionGivenDocblockType errorLevel="suppress" />
         <RedundantCastGivenDocblockType errorLevel="suppress" />
+        <DocblockTypeContradiction errorLevel="suppress" />
     </issueHandlers>
     <projectFiles>
         <directory name="src" />

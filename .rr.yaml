@@ -2,6 +2,13 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 kv:
-  name:
+  test:
     driver: memory
     interval: 1
+  test-2:
+      driver: boltdb
+      dir: "."
+      file: "rr.db"
+      bucket: "test"
+      permissions: 0666
+      interval: 1 # seconds
