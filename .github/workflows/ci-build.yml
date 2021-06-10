@@ -160,7 +160,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.2', '7.3', '7.4', '8.0']
+        php: ['7.4', '8.0']
         os: [ubuntu-latest]
         stability: [prefer-lowest, prefer-stable]
 
@@ -201,14 +201,6 @@ jobs:
           timeout_minutes: 5
           max_attempts: 5
           command: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
-      # Upgrade mockery on PHP 8
-      - name: Install Dependencies
-        if: ${{ matrix.php == '8.0' }}
-        uses: nick-invision/retry@v1
-        with:
-          timeout_minutes: 5
-          max_attempts: 5
-          command: composer update mockery/mockery --prefer-dist --no-interaction --no-progress
 
       # Execution
       - name: Execute Tests
