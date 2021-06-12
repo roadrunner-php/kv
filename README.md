@@ -1,7 +1,6 @@
 # RoadRunner: KeyValue Storage
 
 This repository contains the codebase PSR-16 PHP cache bridge using kv RoadRunner plugin.
-Check [spiral/roadrunner](https://github.com/spiral/roadrunner) to get application server.
 
 ## Installation
 
