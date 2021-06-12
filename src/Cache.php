@@ -12,17 +12,34 @@ declare(strict_types=1);
 namespace Spiral\RoadRunner\KeyValue;
 
 use Spiral\Goridge\RPC\Codec\ProtobufCodec;
+use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\Goridge\RPC\RPCInterface;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Item;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Request;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
+use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
+use Spiral\RoadRunner\KeyValue\Exception\StorageException;
 use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
 final class Cache implements TtlAwareCacheInterface
 {
+    /**
+     * @var string
+     */
+    private const ERROR_INVALID_STORAGE =
+        'Storage "%s" has not been defined. Please make sure your ' .
+        'RoadRunner "kv" configuration contains a storage key named "%1$s"';
+
+    /**
+     * @var string
+     */
+    private const ERROR_TTL_NOT_AVAILABLE =
+        'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
+        'use another driver for the storage if you require this functionality';
+
     /**
      * @var string
      */
@@ -100,9 +117,18 @@ final class Cache implements TtlAwareCacheInterface
         /** @psalm-suppress RedundantCondition */
         $this->assertValidKeys($keys);
 
-        $response = $this->createIndex(
-            $this->call('kv.TTL', $this->requestKeys($keys))
-        );
+        try {
+            $response = $this->createIndex(
+                $this->call('kv.TTL', $this->requestKeys($keys))
+            );
+        } catch (KeyValueException $e) {
+            if (\str_contains($e->getMessage(), '_plugin_ttl')) {
+                $message = \sprintf(self::ERROR_TTL_NOT_AVAILABLE, $this->name);
+                throw new KeyValueException($message, (int)$e->getCode(), $e);
+            }
+
+            throw $e;
+        }
 
         foreach ($keys as $key) {
             yield $key => isset($response[$key]) && $response[$key]->getTimeout() !== ''
@@ -145,10 +171,21 @@ final class Cache implements TtlAwareCacheInterface
      * @param string $method
      * @param Request $request
      * @return Response
+     * @throws KeyValueException
      */
     private function call(string $method, Request $request): Response
     {
-        return $this->rpc->call($method, $request, Response::class);
+        try {
+            return $this->rpc->call($method, $request, Response::class);
+        } catch (ServiceException $e) {
+            $message = \str_replace(["\t", "\n"], ' ', $e->getMessage());
+
+            if (\str_contains($message, 'no such storage')) {
+                throw new StorageException(\sprintf(self::ERROR_INVALID_STORAGE, $this->name));
+            }
+
+            throw new KeyValueException($message, (int)$e->getCode(), $e);
+        }
     }
 
     /**

@@ -13,8 +13,6 @@ namespace Spiral\RoadRunner\KeyValue;
 
 use Spiral\Goridge\RPC\Codec\JsonCodec;
 use Spiral\Goridge\RPC\RPCInterface;
-use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
-use Spiral\RoadRunner\KeyValue\KeyNormalizer\SimpleNormalizer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
