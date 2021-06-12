@@ -16,7 +16,7 @@ use Spiral\Goridge\RPC\RPCInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
-class Factory implements FactoryInterface
+final class Factory implements FactoryInterface
 {
     /**
      * @var RPCInterface
