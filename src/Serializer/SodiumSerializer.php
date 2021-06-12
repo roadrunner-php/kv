@@ -62,9 +62,16 @@ class SodiumSerializer implements SerializerInterface
     public function unserialize(string $value)
     {
         try {
-            return $this->serializer->unserialize(
-                \sodium_crypto_box_seal_open($value, $this->key)
-            );
+            $result = \sodium_crypto_box_seal_open($value, $this->key);
+
+            if ($result === false) {
+                throw new SerializationException(
+                    'Can not decode the received data. Please make sure ' .
+                    'the encryption key matches the one used to encrypt this data'
+                );
+            }
+
+            return $this->serializer->unserialize($result);
         } catch (\SodiumException $e) {
             throw new SerializationException($e->getMessage(), (int)$e->getCode(), $e);
         }
