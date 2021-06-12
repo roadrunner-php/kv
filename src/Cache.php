@@ -21,12 +21,15 @@ use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
 use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
 use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 use Spiral\RoadRunner\KeyValue\Exception\StorageException;
-use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
+use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareInterface;
+use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareTrait;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
-final class Cache implements TtlAwareCacheInterface
+final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
 {
+    use SerializerAwareTrait;
+
     /**
      * @var string
      */
@@ -78,22 +81,17 @@ final class Cache implements TtlAwareCacheInterface
     private \DateTimeZone $zone;
 
     /**
-     * @var SerializerInterface
-     */
-    private SerializerInterface $value;
-
-    /**
      * @param RPCInterface $rpc
      * @param string $name
-     * @param SerializerInterface|null $value
+     * @param SerializerInterface|null $serializer
      */
-    public function __construct(RPCInterface $rpc, string $name, SerializerInterface $value = null)
+    public function __construct(RPCInterface $rpc, string $name, SerializerInterface $serializer = null)
     {
         $this->name = $name;
         $this->rpc = $rpc->withCodec(new ProtobufCodec());
-        $this->value = $value ?? new DefaultSerializer();
-
         $this->zone = new \DateTimeZone('UTC');
+
+        $this->setSerializer($serializer ?? new DefaultSerializer());
     }
 
     /**
@@ -261,9 +259,11 @@ final class Cache implements TtlAwareCacheInterface
             $this->call('kv.MGet', $this->requestKeys($keys))
         );
 
+        $serializer = $this->getSerializer();
+
         foreach ($keys as $key) {
             if (isset($items[$key])) {
-                yield $key => $this->value->unserialize($items[$key]->getValue());
+                yield $key => $serializer->unserialize($items[$key]->getValue());
 
                 continue;
             }
@@ -336,12 +336,13 @@ final class Cache implements TtlAwareCacheInterface
     private function requestValues(iterable $values, string $ttl): Request
     {
         $items = [];
+        $serializer = $this->getSerializer();
 
         /** @psalm-suppress MixedAssignment */
         foreach ($values as $key => $value) {
             $items[] = new Item([
-                'key' => $key,
-                'value' => $this->value->serialize($value),
+                'key'     => $key,
+                'value'   => $serializer->serialize($value),
                 'timeout' => $ttl
             ]);
         }

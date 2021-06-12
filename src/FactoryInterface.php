@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue;
 
-interface FactoryInterface
+use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareInterface;
+
+interface FactoryInterface extends SerializerAwareInterface
 {
     /**
      * Returns information about whether a key value plugin is available.

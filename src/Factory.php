@@ -13,49 +13,28 @@ namespace Spiral\RoadRunner\KeyValue;
 
 use Spiral\Goridge\RPC\Codec\JsonCodec;
 use Spiral\Goridge\RPC\RPCInterface;
+use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareTrait;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
 final class Factory implements FactoryInterface
 {
+    use SerializerAwareTrait;
+
     /**
      * @var RPCInterface
      */
     private RPCInterface $rpc;
 
-    /**
-     * @var SerializerInterface
-     */
-    private SerializerInterface $value;
 
     /**
      * @param RPCInterface $rpc
-     * @param SerializerInterface|null $value
+     * @param SerializerInterface|null $serializer
      */
-    public function __construct(RPCInterface $rpc, SerializerInterface $value = null)
+    public function __construct(RPCInterface $rpc, SerializerInterface $serializer = null)
     {
         $this->rpc = $rpc;
-        $this->value = $value ?? new DefaultSerializer();
-    }
-
-    /**
-     * @param SerializerInterface $serializer
-     * @return $this
-     */
-    public function withSerializer(SerializerInterface $serializer): self
-    {
-        $self = clone $this;
-        $self->value = $serializer;
-
-        return $self;
-    }
-
-    /**
-     * @return SerializerInterface
-     */
-    public function getSerializer(): SerializerInterface
-    {
-        return $this->value;
+        $this->setSerializer($serializer ?? new DefaultSerializer());
     }
 
     /**
@@ -84,6 +63,6 @@ final class Factory implements FactoryInterface
      */
     public function select(string $name): TtlAwareCacheInterface
     {
-        return new Cache($this->rpc, $name, $this->value);
+        return new Cache($this->rpc, $name, $this->getSerializer());
     }
 }
