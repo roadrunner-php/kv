@@ -46,7 +46,10 @@
         ],
         "tests": "phpunit",
         "cs-fix": "spiral-cs fix src tests",
-        "cs-check": "spiral-cs check src tests"
+        "analyze": [
+            "psalm --no-cache",
+            "spiral-cs check src tests"
+        ]
     },
     "extra": {
         "branch-alias": {

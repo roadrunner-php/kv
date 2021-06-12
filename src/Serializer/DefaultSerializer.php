@@ -26,7 +26,7 @@ class DefaultSerializer implements SerializerInterface
      */
     public function unserialize(string $value)
     {
-        switch($value) {
+        switch ($value) {
             case 'N;':
                 return null;
 
