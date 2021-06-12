@@ -19,7 +19,7 @@ use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
 use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
-use Spiral\RoadRunner\KeyValue\Serializer\SimpleSerializer;
+use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
 final class Cache implements TtlAwareCacheInterface
 {
@@ -73,7 +73,7 @@ final class Cache implements TtlAwareCacheInterface
     {
         $this->name = $name;
         $this->rpc = $rpc->withCodec(new ProtobufCodec());
-        $this->value = $value ?? new SimpleSerializer();
+        $this->value = $value ?? new DefaultSerializer();
 
         $this->zone = new \DateTimeZone('UTC');
     }

@@ -11,17 +11,21 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Serializer;
 
+use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
+
 interface SerializerInterface
 {
     /**
      * @param mixed $value
-     * @return scalar
+     * @return string
+     * @throws SerializationException
      */
-    public function serialize($value);
+    public function serialize($value): string;
 
     /**
-     * @param mixed $value
+     * @param string $value
      * @return mixed
+     * @throws SerializationException
      */
-    public function unserialize($value);
+    public function unserialize(string $value);
 }

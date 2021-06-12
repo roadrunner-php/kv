@@ -5,14 +5,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Anton Titov / Wolfy-J",
-            "email": "wolfy.jd@gmail.com"
-        },
-        {
-            "name": "48d90782"
-        },
-        {
-            "name": "vvval"
+            "name": "Kirill Nesmeyanov (SerafimArts)",
+            "email": "kirill.nesmeyanov@spiralscout.com"
         },
         {
             "name": "RoadRunner Community",
@@ -58,6 +52,10 @@
         "branch-alias": {
             "dev-master": "1.0.x-dev"
         }
+    },
+    "suggest": {
+        "ext-igbinary": "(>3.1.6) Igbinary serailizer support",
+        "ext-sodium": "Sodium serailizer support"
     },
     "config": {
         "sort-packages": true

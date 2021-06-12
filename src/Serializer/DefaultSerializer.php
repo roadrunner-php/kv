@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Serializer;
 
-class SimpleSerializer implements SerializerInterface
+class DefaultSerializer implements SerializerInterface
 {
     /**
      * {@inheritDoc}
      */
-    public function serialize($value)
+    public function serialize($value): string
     {
         return \serialize($value);
     }
@@ -24,8 +24,19 @@ class SimpleSerializer implements SerializerInterface
     /**
      * {@inheritDoc}
      */
-    public function unserialize($value)
+    public function unserialize(string $value)
     {
+        switch($value) {
+            case 'N;':
+                return null;
+
+            case 'b:0;':
+                return false;
+
+            case 'b:1;':
+                return true;
+        }
+
         return \unserialize($value, [
             'allowed_classes' => true
         ]);

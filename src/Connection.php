@@ -16,7 +16,7 @@ use Spiral\Goridge\RPC\RPCInterface;
 use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
 use Spiral\RoadRunner\KeyValue\KeyNormalizer\SimpleNormalizer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
-use Spiral\RoadRunner\KeyValue\Serializer\SimpleSerializer;
+use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
 class Connection implements ConnectionInterface
 {
@@ -39,7 +39,7 @@ class Connection implements ConnectionInterface
         SerializerInterface $value = null
     ) {
         $this->rpc = $rpc;
-        $this->value = $value ?? new SimpleSerializer();
+        $this->value = $value ?? new DefaultSerializer();
     }
 
     /**
