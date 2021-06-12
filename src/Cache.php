@@ -19,6 +19,7 @@ use Spiral\RoadRunner\KeyValue\DTO\V1\Request;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
 use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
+use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 use Spiral\RoadRunner\KeyValue\Exception\StorageException;
 use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
@@ -97,6 +98,7 @@ final class Cache implements TtlAwareCacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws KeyValueException
      */
     public function getTtl(string $key): ?\DateTimeInterface
     {
@@ -111,6 +113,7 @@ final class Cache implements TtlAwareCacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws KeyValueException
      */
     public function getMultipleTtl(iterable $keys = []): iterable
     {
@@ -229,6 +232,7 @@ final class Cache implements TtlAwareCacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws KeyValueException
      */
     public function get($key, $default = null)
     {
@@ -246,6 +250,7 @@ final class Cache implements TtlAwareCacheInterface
      * @psalm-param iterable<string> $keys
      * @psalm-param mixed $default
      * @psalm-suppress MoreSpecificImplementedParamType
+     * @throws KeyValueException
      */
     public function getMultiple($keys, $default = null)
     {
@@ -274,6 +279,7 @@ final class Cache implements TtlAwareCacheInterface
      * @psalm-param mixed $value
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
+     * @throws KeyValueException
      */
     public function set($key, $value, $ttl = null): bool
     {
@@ -299,6 +305,7 @@ final class Cache implements TtlAwareCacheInterface
      * @psalm-param iterable<string, mixed> $values
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
+     * @throws KeyValueException
      */
     public function setMultiple($values, $ttl = null): bool
     {
@@ -324,6 +331,7 @@ final class Cache implements TtlAwareCacheInterface
      * @param iterable<string, mixed> $values
      * @param string $ttl
      * @return Request
+     * @throws SerializationException
      */
     private function requestValues(iterable $values, string $ttl): Request
     {
@@ -389,6 +397,7 @@ final class Cache implements TtlAwareCacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws KeyValueException
      */
     public function delete($key): bool
     {
@@ -400,6 +409,7 @@ final class Cache implements TtlAwareCacheInterface
      *
      * @psalm-param iterable<string> $keys
      * @psalm-suppress MoreSpecificImplementedParamType
+     * @throws KeyValueException
      */
     public function deleteMultiple($keys): bool
     {
@@ -421,6 +431,7 @@ final class Cache implements TtlAwareCacheInterface
 
     /**
      * {@inheritDoc}
+     * @throws KeyValueException
      */
     public function has($key): bool
     {
