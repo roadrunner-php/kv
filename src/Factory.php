@@ -32,10 +32,8 @@ final class Factory implements FactoryInterface
      * @param RPCInterface $rpc
      * @param SerializerInterface|null $value
      */
-    public function __construct(
-        RPCInterface $rpc,
-        SerializerInterface $value = null
-    ) {
+    public function __construct(RPCInterface $rpc, SerializerInterface $value = null)
+    {
         $this->rpc = $rpc;
         $this->value = $value ?? new DefaultSerializer();
     }
