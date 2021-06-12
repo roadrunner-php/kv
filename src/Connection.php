@@ -12,8 +12,11 @@ declare(strict_types=1);
 namespace Spiral\RoadRunner\KeyValue;
 
 use Spiral\Goridge\RPC\Codec\JsonCodec;
-use Spiral\Goridge\RPC\Codec\ProtobufCodec;
 use Spiral\Goridge\RPC\RPCInterface;
+use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
+use Spiral\RoadRunner\KeyValue\KeyNormalizer\SimpleNormalizer;
+use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
+use Spiral\RoadRunner\KeyValue\Serializer\SimpleSerializer;
 
 class Connection implements ConnectionInterface
 {
@@ -23,11 +26,40 @@ class Connection implements ConnectionInterface
     private RPCInterface $rpc;
 
     /**
-     * @param RPCInterface $rpc
+     * @var SerializerInterface
      */
-    public function __construct(RPCInterface $rpc)
-    {
+    private SerializerInterface $value;
+
+    /**
+     * @param RPCInterface $rpc
+     * @param SerializerInterface|null $value
+     */
+    public function __construct(
+        RPCInterface $rpc,
+        SerializerInterface $value = null
+    ) {
         $this->rpc = $rpc;
+        $this->value = $value ?? new SimpleSerializer();
+    }
+
+    /**
+     * @param SerializerInterface $serializer
+     * @return $this
+     */
+    public function withSerializer(SerializerInterface $serializer): self
+    {
+        $self = clone $this;
+        $self->value = $serializer;
+
+        return $self;
+    }
+
+    /**
+     * @return SerializerInterface
+     */
+    public function getSerializer(): SerializerInterface
+    {
+        return $this->value;
     }
 
     /**
@@ -56,6 +88,6 @@ class Connection implements ConnectionInterface
      */
     public function create(string $name): TtlAwareCacheInterface
     {
-        return new Cache($this->rpc, $name);
+        return new Cache($this->rpc, $name, $this->value);
     }
 }

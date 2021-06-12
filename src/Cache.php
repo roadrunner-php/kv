@@ -1,9 +1,10 @@
 <?php
 
 /**
- * Spiral Framework, SpiralScout LLC.
+ * This file is part of RoadRunner package.
  *
- * @author Valentin Vintsukevich (vvval)
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -16,6 +17,9 @@ use Spiral\RoadRunner\KeyValue\DTO\V1\Item;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Request;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
+use Spiral\RoadRunner\KeyValue\KeyNormalizer\KeyNormalizerInterface;
+use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
+use Spiral\RoadRunner\KeyValue\Serializer\SimpleSerializer;
 
 final class Cache implements TtlAwareCacheInterface
 {
@@ -56,15 +60,22 @@ final class Cache implements TtlAwareCacheInterface
     private \DateTimeZone $zone;
 
     /**
+     * @var SerializerInterface
+     */
+    private SerializerInterface $value;
+
+    /**
      * @param RPCInterface $rpc
      * @param string $name
-     * @param \DateTimeZone|null $zone
+     * @param SerializerInterface|null $value
      */
-    public function __construct(RPCInterface $rpc, string $name, \DateTimeZone $zone = null)
+    public function __construct(RPCInterface $rpc, string $name, SerializerInterface $value = null)
     {
         $this->name = $name;
         $this->rpc = $rpc->withCodec(new ProtobufCodec());
-        $this->zone = $zone ?? new \DateTimeZone('UTC');
+        $this->value = $value ?? new SimpleSerializer();
+
+        $this->zone = new \DateTimeZone('UTC');
     }
 
     /**
@@ -101,91 +112,14 @@ final class Cache implements TtlAwareCacheInterface
     }
 
     /**
-     * @param array<Item> $items
-     * @return Request
+     * @param mixed|array<string> $keys
+     * @throws InvalidArgumentException
      */
-    private function request(array $items): Request
+    private function assertValidKeys($keys): void
     {
-        return new Request([
-            'storage' => $this->name,
-            'items'   => $items,
-        ]);
-    }
-
-    /**
-     * @param iterable<string> $keys
-     * @return Request
-     */
-    private function requestKeys(iterable $keys): Request
-    {
-        $items = [];
-
-        foreach ($keys as $key) {
-            $items[] = new Item(['key' => $key]);
+        if (! \is_iterable($keys)) {
+            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEYS, \get_debug_type($keys)));
         }
-
-        return $this->request($items);
-    }
-
-    /**
-     * @param iterable<string, mixed> $values
-     * @param string $ttl
-     * @return Request
-     */
-    private function requestValues(iterable $values, string $ttl): Request
-    {
-        $items = [];
-
-        /** @psalm-suppress MixedAssignment */
-        foreach ($values as $key => $value) {
-            $items[] = new Item(['key' => $key, 'value' => $value, 'timeout' => $ttl]);
-        }
-
-        return $this->request($items);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function get($key, $default = null)
-    {
-        /** @psalm-suppress MixedAssignment */
-        foreach ($this->getMultiple([$key], $default) as $value) {
-            return $value;
-        }
-
-        return $default;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @psalm-param string $key
-     * @psalm-param mixed $value
-     * @psalm-param positive-int|\DateInterval|null $ttl
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
-    public function set($key, $value, $ttl = null): bool
-    {
-        $this->assertValidKey($key);
-
-        return $this->setMultiple([$key => $value], $ttl);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function delete($key): bool
-    {
-        return $this->deleteMultiple([$key]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function clear(): bool
-    {
-        throw new \LogicException(__METHOD__ . ' not implemented yet');
     }
 
     /**
@@ -205,6 +139,71 @@ final class Cache implements TtlAwareCacheInterface
     }
 
     /**
+     * @psalm-suppress MixedReturnStatement
+     * @psalm-suppress MixedInferredReturnType
+     *
+     * @param string $method
+     * @param Request $request
+     * @return Response
+     */
+    private function call(string $method, Request $request): Response
+    {
+        return $this->rpc->call($method, $request, Response::class);
+    }
+
+    /**
+     * @param iterable<string> $keys
+     * @return Request
+     */
+    private function requestKeys(iterable $keys): Request
+    {
+        $items = [];
+
+        foreach ($keys as $key) {
+            $items[] = new Item(['key' => $key]);
+        }
+
+        return $this->request($items);
+    }
+
+    /**
+     * @param array<Item> $items
+     * @return Request
+     */
+    private function request(array $items): Request
+    {
+        return new Request([
+            'storage' => $this->name,
+            'items'   => $items,
+        ]);
+    }
+
+    /**
+     * @param string $time
+     * @return \DateTimeImmutable
+     *
+     * @psalm-suppress InvalidFalsableReturnType
+     * @psalm-suppress FalsableReturnStatement
+     */
+    private function dateFromRfc3339String(string $time): \DateTimeImmutable
+    {
+        return \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339, $time, $this->zone);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function get($key, $default = null)
+    {
+        /** @psalm-suppress MixedAssignment */
+        foreach ($this->getMultiple([$key], $default) as $value) {
+            return $value;
+        }
+
+        return $default;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @psalm-param iterable<string> $keys
@@ -221,7 +220,39 @@ final class Cache implements TtlAwareCacheInterface
         );
 
         foreach ($keys as $key) {
-            yield $key => isset($items[$key]) ? $items[$key]->getValue() : $default;
+            if (isset($items[$key])) {
+                yield $key => $this->value->unserialize($items[$key]->getValue());
+
+                continue;
+            }
+
+            yield $key => $default;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @psalm-param string $key
+     * @psalm-param mixed $value
+     * @psalm-param positive-int|\DateInterval|null $ttl
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function set($key, $value, $ttl = null): bool
+    {
+        $this->assertValidKey($key);
+
+        return $this->setMultiple([$key => $value], $ttl);
+    }
+
+    /**
+     * @param mixed|string $key
+     * @throws InvalidArgumentException
+     */
+    private function assertValidKey($key): void
+    {
+        if (! \is_string($key)) {
+            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
         }
     }
 
@@ -242,30 +273,35 @@ final class Cache implements TtlAwareCacheInterface
     }
 
     /**
-     * Please note that this interface currently emulates the behavior of the
-     * PSR-20 implementation and may be replaced by the `psr/clock`
-     * implementation in future versions.
-     *
-     * Returns the current time as a DateTimeImmutable instance.
-     *
-     * @return \DateTimeImmutable
-     * @throws \Exception
+     * @param mixed|array<string, mixed> $values
+     * @throws InvalidArgumentException
      */
-    protected function now(): \DateTimeImmutable
+    private function assertValidValues($values): void
     {
-        return new \DateTimeImmutable('NOW', $this->zone);
+        if (! \is_iterable($values)) {
+            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_VALUES, \get_debug_type($values)));
+        }
     }
 
     /**
-     * @param string $time
-     * @return \DateTimeImmutable
-     *
-     * @psalm-suppress InvalidFalsableReturnType
-     * @psalm-suppress FalsableReturnStatement
+     * @param iterable<string, mixed> $values
+     * @param string $ttl
+     * @return Request
      */
-    private function dateFromRfc3339String(string $time): \DateTimeImmutable
+    private function requestValues(iterable $values, string $ttl): Request
     {
-        return \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339, $time, $this->zone);
+        $items = [];
+
+        /** @psalm-suppress MixedAssignment */
+        foreach ($values as $key => $value) {
+            $items[] = new Item([
+                'key' => $key,
+                'value' => $this->value->serialize($value),
+                'timeout' => $ttl
+            ]);
+        }
+
+        return $this->request($items);
     }
 
     /**
@@ -290,12 +326,36 @@ final class Cache implements TtlAwareCacheInterface
             $now = $this->now();
 
             return $now->setTimestamp($ttl + $now->getTimestamp())
-                ->format(\DateTimeInterface::RFC3339);
+                ->format(\DateTimeInterface::RFC3339)
+            ;
         }
 
         throw new InvalidArgumentException(
             \sprintf(self::ERROR_INVALID_INTERVAL_ARGUMENT, \get_debug_type($ttl))
         );
+    }
+
+    /**
+     * Please note that this interface currently emulates the behavior of the
+     * PSR-20 implementation and may be replaced by the `psr/clock`
+     * implementation in future versions.
+     *
+     * Returns the current time as a DateTimeImmutable instance.
+     *
+     * @return \DateTimeImmutable
+     * @throws \Exception
+     */
+    protected function now(): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable('NOW', $this->zone);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function delete($key): bool
+    {
+        return $this->deleteMultiple([$key]);
     }
 
     /**
@@ -317,6 +377,14 @@ final class Cache implements TtlAwareCacheInterface
     /**
      * {@inheritDoc}
      */
+    public function clear(): bool
+    {
+        throw new \LogicException(__METHOD__ . ' not implemented yet');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function has($key): bool
     {
         $this->assertValidKey($key);
@@ -327,51 +395,5 @@ final class Cache implements TtlAwareCacheInterface
             ->count();
 
         return $count !== 0;
-    }
-
-    /**
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
-     *
-     * @param string $method
-     * @param Request $request
-     * @return Response
-     */
-    private function call(string $method, Request $request): Response
-    {
-        return $this->rpc->call($method, $request, Response::class);
-    }
-
-    /**
-     * @param mixed|array<string, mixed> $values
-     * @throws InvalidArgumentException
-     */
-    private function assertValidValues($values): void
-    {
-        if (! \is_iterable($values)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_VALUES, \get_debug_type($values)));
-        }
-    }
-
-    /**
-     * @param mixed|array<string> $keys
-     * @throws InvalidArgumentException
-     */
-    private function assertValidKeys($keys): void
-    {
-        if (! \is_iterable($keys)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEYS, \get_debug_type($keys)));
-        }
-    }
-
-    /**
-     * @param mixed|string $key
-     * @throws InvalidArgumentException
-     */
-    private function assertValidKey($key): void
-    {
-        if (! \is_string($key)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
-        }
     }
 }
