@@ -18,7 +18,7 @@ use Spiral\RoadRunner\KeyValue\KeyNormalizer\SimpleNormalizer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
-class Connection implements ConnectionInterface
+class Factory implements FactoryInterface
 {
     /**
      * @var RPCInterface
@@ -86,7 +86,7 @@ class Connection implements ConnectionInterface
     /**
      * {@inheritDoc}
      */
-    public function create(string $name): TtlAwareCacheInterface
+    public function select(string $name): TtlAwareCacheInterface
     {
         return new Cache($this->rpc, $name, $this->value);
     }

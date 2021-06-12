@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue;
 
-interface ConnectionInterface
+interface FactoryInterface
 {
     /**
      * Returns information about whether a key value plugin is available.
@@ -26,5 +26,5 @@ interface ConnectionInterface
      * @param string $name
      * @return TtlAwareCacheInterface
      */
-    public function create(string $name): TtlAwareCacheInterface;
+    public function select(string $name): TtlAwareCacheInterface;
 }

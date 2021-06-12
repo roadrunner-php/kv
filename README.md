@@ -47,15 +47,15 @@ RoadRunner server.
 
 require __DIR__ . '/vendor/autoload.php';
 
-$connection = new \Spiral\RoadRunner\KeyValue\Connection(
+$factory = new \Spiral\RoadRunner\KeyValue\Factory(
     \Spiral\Goridge\RPC\RPC::create('tcp://127.0.0.1:6001')
 );
 
-if (!$connection->isAvailable()) {
+if (!$factory->isAvailable()) {
     throw new \LogicException('The [kv] plugin not available');
 }
 
-$cache = $connection->create('test');
+$cache = $factory->select('test');
 
 // After that you can write and read arbitrary values:
 
