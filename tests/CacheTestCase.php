@@ -226,7 +226,9 @@ class CacheTestCase extends TestCase
     public function testBadStorageNameOnAnyMethodExecution(callable $handler): void
     {
         // When RPC ServiceException like
-        $error = function () { throw new ServiceException('no such storage "' . $this->name . '"'); };
+        $error = function () {
+            throw new ServiceException('no such storage "' . $this->name . '"');
+        };
 
         // Then expects message like that cache storage has not been defined
         $this->expectException(StorageException::class);
@@ -256,7 +258,9 @@ class CacheTestCase extends TestCase
     public function testTtlNotAvailable(): void
     {
         // When RPC ServiceException like
-        $error = function () { throw new ServiceException('memcached_plugin_ttl: ttl not available'); };
+        $error = function () {
+            throw new ServiceException('memcached_plugin_ttl: ttl not available');
+        };
 
         // Then expects message like that TTL not available
         $this->expectException(NotImplementedException::class);
@@ -501,7 +505,7 @@ class CacheTestCase extends TestCase
             ->format(\DateTimeInterface::RFC3339);
 
         $driver = $this->frozenDateCache($now, [
-            'kv.Set' => function(Request $request) use ($expected) {
+            'kv.Set' => function (Request $request) use ($expected) {
                 /** @var Item $item */
                 $item = $request->getItems()[0];
                 $this->assertSame($expected, $item->getTimeout());
@@ -527,7 +531,7 @@ class CacheTestCase extends TestCase
             ->format(\DateTimeInterface::RFC3339);
 
         $driver = $this->frozenDateCache($now, [
-            'kv.Set' => function(Request $request) use ($expected) {
+            'kv.Set' => function (Request $request) use ($expected) {
                 /** @var Item $item */
                 $item = $request->getItems()[0];
                 $this->assertSame($expected, $item->getTimeout());
@@ -614,7 +618,8 @@ class CacheTestCase extends TestCase
         $this->expectExceptionMessage('Cache key must be a string, but int passed');
 
         $driver = $this->cache();
-        foreach ($driver->getMultiple([0 => 0xDEAD_BEEF]) as $_) {}
+        foreach ($driver->getMultiple([0 => 0xDEAD_BEEF]) as $_) {
+        }
     }
 
     public function testGetMultipleWithInvalidValue(): void
@@ -623,7 +628,8 @@ class CacheTestCase extends TestCase
         $this->expectExceptionMessage('Cache keys must be an array<string>, but int passed');
 
         $driver = $this->cache();
-        foreach ($driver->getMultiple(0xDEAD_BEEF) as $_) {}
+        foreach ($driver->getMultiple(0xDEAD_BEEF) as $_) {
+        }
     }
 
     public function testSetWithInvalidKey(): void

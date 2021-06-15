@@ -51,7 +51,7 @@ class FactoryTestCase extends TestCase
 
     public function testNotAvailableOnErrorResponse(): void
     {
-        $factory = $this->factory(['informer.List' => (static function() {
+        $factory = $this->factory(['informer.List' => (static function () {
             throw new \Exception();
         })]);
 
