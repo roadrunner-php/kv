@@ -19,8 +19,12 @@ final class FrozenDateCacheStub extends Cache
 {
     private \DateTimeImmutable $date;
 
-    public function __construct(\DateTimeImmutable $date, RPCInterface $rpc, string $name, SerializerInterface $serializer = null)
-    {
+    public function __construct(
+        \DateTimeImmutable $date,
+        RPCInterface $rpc,
+        string $name,
+        SerializerInterface $serializer = null
+    ) {
         $this->date = $date;
 
         parent::__construct($rpc, $name, $serializer);

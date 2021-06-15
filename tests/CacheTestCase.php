@@ -58,15 +58,6 @@ class CacheTestCase extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $mapping
-     * @param SerializerInterface|null $serializer
-     */
-    private function frozenDateCache(\DateTimeImmutable $date, array $mapping = [], SerializerInterface $serializer = null): Cache
-    {
-        return new FrozenDateCacheStub($date, $this->rpc($mapping), $this->name, $serializer);
-    }
-
-    /**
      * @dataProvider serializersDataProvider
      */
     public function testTtl(SerializerInterface $serializer): void
@@ -76,8 +67,8 @@ class CacheTestCase extends TestCase
         $driver = $this->cache([
             'kv.TTL' => fn() => $this->response([
                 new Item([
-                    'key' => $key,
-                    'value' => $serializer->serialize(null),
+                    'key'     => $key,
+                    'value'   => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -135,13 +126,13 @@ class CacheTestCase extends TestCase
         $driver = $this->cache([
             'kv.TTL' => fn() => $this->response([
                 new Item([
-                    'key' => $keys[0],
-                    'value' => $serializer->serialize(null),
+                    'key'     => $keys[0],
+                    'value'   => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
                 new Item([
-                    'key' => $keys[1],
-                    'value' => $serializer->serialize(null),
+                    'key'     => $keys[1],
+                    'value'   => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -166,8 +157,8 @@ class CacheTestCase extends TestCase
         $driver = $this->cache([
             'kv.TTL' => fn() => $this->response([
                 new Item([
-                    'key' => $keys[0],
-                    'value' => $serializer->serialize(null),
+                    'key'     => $keys[0],
+                    'value'   => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -273,32 +264,6 @@ class CacheTestCase extends TestCase
         $driver = $this->cache(['kv.TTL' => $error]);
 
         $driver->getTtl('key');
-    }
-
-    /**
-     * @return array<string, array{0: SerializerInterface}>
-     * @throws \SodiumException
-     */
-    public function serializersDataProvider(): array
-    {
-        $result = [];
-        $result['PHP Serialize'] = [new DefaultSerializer()];
-
-        // ext-igbinary required for this serializer
-        if (\extension_loaded('igbinary')) {
-            $result['Igbinary'] = [new IgbinarySerializer()];
-        }
-
-        // ext-sodium required for this serialize
-        if (\extension_loaded('sodium')) {
-            foreach ($result as $name => [$serializer]) {
-                $result['Sodium through ' . $name] = [
-                    new SodiumSerializer($serializer, \sodium_crypto_box_keypair()),
-                ];
-            }
-        }
-
-        return $result;
     }
 
     /**
@@ -414,6 +379,63 @@ class CacheTestCase extends TestCase
         $driver->clear();
     }
 
+    public function serializersWithValuesDataProvider(): array
+    {
+        $result = [];
+
+        foreach ($this->serializersDataProvider() as $name => [$serializer]) {
+            foreach ($this->valuesDataProvider() as $type => [$value]) {
+                $result['[' . $type . '] using [' . $name . ']'] = [$serializer, $value];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array<string, array{0: SerializerInterface}>
+     * @throws \SodiumException
+     */
+    public function serializersDataProvider(): array
+    {
+        $result = [];
+        $result['PHP Serialize'] = [new DefaultSerializer()];
+
+        // ext-igbinary required for this serializer
+        if (\extension_loaded('igbinary')) {
+            $result['Igbinary'] = [new IgbinarySerializer()];
+        }
+
+        // ext-sodium required for this serialize
+        if (\extension_loaded('sodium')) {
+            foreach ($result as $name => [$serializer]) {
+                $result['Sodium through ' . $name] = [
+                    new SodiumSerializer($serializer, \sodium_crypto_box_keypair()),
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @dataProvider serializersWithValuesDataProvider
+     */
+    public function testSet(SerializerInterface $serializer, $expected): void
+    {
+        if (\is_float($expected) && \is_nan($expected)) {
+            $this->markTestSkipped('Unable to execute test for NAN float value');
+        }
+
+        if (\is_resource($expected)) {
+            $this->markTestSkipped('Unable to execute test for resource value');
+        }
+
+        $driver = $this->getAssertableCacheOnSet($serializer, ['key' => $expected]);
+
+        $driver->set('key', $expected);
+    }
+
     /**
      * @param SerializerInterface $serializer
      * @param array $expected
@@ -440,39 +462,6 @@ class CacheTestCase extends TestCase
                 return $this->response($result);
             },
         ], $serializer);
-    }
-
-
-
-    public function serializersWithValuesDataProvider(): array
-    {
-        $result = [];
-
-        foreach ($this->serializersDataProvider() as $name => [$serializer]) {
-            foreach ($this->valuesDataProvider() as $type => [$value]) {
-                $result['[' . $type . '] using [' . $name . ']'] = [$serializer, $value];
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * @dataProvider serializersWithValuesDataProvider
-     */
-    public function testSet(SerializerInterface $serializer, $expected): void
-    {
-        if (\is_float($expected) && \is_nan($expected)) {
-            $this->markTestSkipped('Unable to execute test for NAN float value');
-        }
-
-        if (\is_resource($expected)) {
-            $this->markTestSkipped('Unable to execute test for resource value');
-        }
-
-        $driver = $this->getAssertableCacheOnSet($serializer, ['key' => $expected]);
-
-        $driver->set('key', $expected);
     }
 
     /**
@@ -511,11 +500,23 @@ class CacheTestCase extends TestCase
                 $this->assertSame($expected, $item->getTimeout());
 
                 return $this->response();
-            }
+            },
         ]);
 
         // Send relative date in $now + $seconds
         $driver->set('key', 'value', $seconds);
+    }
+
+    /**
+     * @param array<string, mixed> $mapping
+     * @param SerializerInterface|null $serializer
+     */
+    private function frozenDateCache(
+        \DateTimeImmutable $date,
+        array $mapping = [],
+        SerializerInterface $serializer = null
+    ): Cache {
+        return new FrozenDateCacheStub($date, $this->rpc($mapping), $this->name, $serializer);
     }
 
     public function testSetWithRelativeDateIntervalTTL(): void
@@ -537,7 +538,7 @@ class CacheTestCase extends TestCase
                 $this->assertSame($expected, $item->getTimeout());
 
                 return $this->response();
-            }
+            },
         ]);
 
         $driver->set('key', 'value', $interval);
@@ -578,7 +579,7 @@ class CacheTestCase extends TestCase
         $driver = $this->cache([
             'kv.Delete' => function () {
                 throw new ServiceException('Error: Can not delete something');
-            }
+            },
         ]);
 
         $driver->delete('key');
@@ -597,7 +598,7 @@ class CacheTestCase extends TestCase
         $driver = $this->cache([
             'kv.Delete' => function () {
                 throw new ServiceException('Error: Can not delete something');
-            }
+            },
         ]);
 
         $driver->deleteMultiple(['key', 'key2']);
@@ -619,6 +620,7 @@ class CacheTestCase extends TestCase
 
         $driver = $this->cache();
         foreach ($driver->getMultiple([0 => 0xDEAD_BEEF]) as $_) {
+            //
         }
     }
 
@@ -720,7 +722,6 @@ class CacheTestCase extends TestCase
         ], new RawSerializerStub());
 
         $actual = $driver->withSerializer(new DefaultSerializer())
-            ->get('key')
-        ;
+            ->get('key');
     }
 }
