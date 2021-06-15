@@ -44,6 +44,7 @@ class DefaultSerializer implements SerializerInterface
 
         \error_clear_last();
 
+        /** @var mixed $result */
         $result = @\unserialize($value, [
             'allowed_classes' => true,
         ]);
