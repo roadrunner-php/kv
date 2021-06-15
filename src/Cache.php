@@ -118,7 +118,11 @@ class Cache implements StorageInterface
             return $ttl;
         }
 
+        // @codeCoverageIgnoreStart
+        // This stmt MUST NOT be executed and is present in the code
+        // only for static analysis.
         return null;
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -257,7 +261,11 @@ class Cache implements StorageInterface
             return $value;
         }
 
+        // @codeCoverageIgnoreStart
+        // This stmt MUST NOT be executed and is present in the code
+        // only for static analysis.
         return $default;
+        // @codeCoverageIgnoreEnd
     }
 
     /**

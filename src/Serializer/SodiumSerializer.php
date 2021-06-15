@@ -33,9 +33,18 @@ class SodiumSerializer implements SerializerInterface
      */
     public function __construct(SerializerInterface $serializer, string $key)
     {
+        $this->assertAvailable();
+
         $this->key = $key;
         $this->serializer = $serializer;
+    }
 
+    /**
+     * @codeCoverageIgnore Reason: Ignore environment-aware assertions
+     * @return void
+     */
+    private function assertAvailable(): void
+    {
         if (!\function_exists('\\sodium_crypto_box_seal')) {
             throw new \LogicException('The "ext-sodium" PHP extension is not available');
         }
