@@ -23,7 +23,7 @@ class SodiumEdgeCasesTestCase extends TestCase
     public function testSodiumSerializeInvalidKey(): void
     {
         $this->expectException(SerializationException::class);
-        $this->expectExceptionMessage('keypair should be SODIUM_CRYPTO_BOX_KEYPAIRBYTES bytes');
+        $this->expectExceptionMessage('SODIUM_CRYPTO_BOX_KEYPAIRBYTES');
 
         $serializer = new SodiumSerializer(new DefaultSerializer(), 'KEY');
 
@@ -33,7 +33,7 @@ class SodiumEdgeCasesTestCase extends TestCase
     public function testSodiumUnserializeInvalidKey(): void
     {
         $this->expectException(SerializationException::class);
-        $this->expectExceptionMessage('keypair size should be SODIUM_CRYPTO_BOX_KEYPAIRBYTES bytes');
+        $this->expectExceptionMessage('SODIUM_CRYPTO_BOX_KEYPAIRBYTES');
 
         $serializer = new SodiumSerializer(new DefaultSerializer(), 'KEY');
 
