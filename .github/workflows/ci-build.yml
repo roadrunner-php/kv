@@ -179,7 +179,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           # PHP Extras
-          extensions: pdo, pdo_mysql, pdo_sqlite, sockets
+          extensions: sockets, igbinary, sodium
           coverage: pcov
           tools: pecl
           ini-values: "memory_limit=-1"

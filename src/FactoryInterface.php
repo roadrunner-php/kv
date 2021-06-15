@@ -26,7 +26,7 @@ interface FactoryInterface extends SerializerAwareInterface
      * Create a shared cache storage by its name.
      *
      * @param string $name
-     * @return TtlAwareCacheInterface
+     * @return StorageInterface
      */
-    public function select(string $name): TtlAwareCacheInterface;
+    public function select(string $name): StorageInterface;
 }

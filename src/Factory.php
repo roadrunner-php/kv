@@ -29,7 +29,6 @@ final class Factory implements FactoryInterface
      */
     private RPCInterface $rpc;
 
-
     /**
      * @param RPCInterface $rpc
      * @param SerializerInterface|null $serializer
@@ -64,7 +63,7 @@ final class Factory implements FactoryInterface
     /**
      * {@inheritDoc}
      */
-    public function select(string $name): TtlAwareCacheInterface
+    public function select(string $name): StorageInterface
     {
         return new Cache($this->rpc, $name, $this->getSerializer());
     }

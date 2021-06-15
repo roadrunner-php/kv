@@ -32,9 +32,19 @@ class IgbinarySerializer implements SerializerInterface
         'version v' . self::SUPPORTED_VERSION_MIN . ' or higher required';
 
     /**
+     * @codeCoverageIgnore Reason: Contains only initialization assertion
      * @throws \LogicException
      */
     public function __construct()
+    {
+        $this->assertAvailable();
+    }
+
+    /**
+     * @codeCoverageIgnore Reason: Ignore environment-aware assertions
+     * @return void
+     */
+    private function assertAvailable(): void
     {
         if (! \extension_loaded('igbinary')) {
             throw new \LogicException(self::ERROR_NOT_AVAILABLE);

@@ -19,6 +19,7 @@ use Spiral\RoadRunner\KeyValue\DTO\V1\Request;
 use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
 use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
+use Spiral\RoadRunner\KeyValue\Exception\NotImplementedException;
 use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 use Spiral\RoadRunner\KeyValue\Exception\StorageException;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareInterface;
@@ -29,7 +30,7 @@ use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 /**
  * @psalm-suppress PropertyNotSetInConstructor
  */
-final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
+class Cache implements StorageInterface
 {
     use SerializerAwareTrait;
 
@@ -50,17 +51,17 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
     /**
      * @var string
      */
-    private const ERROR_INVALID_KEY = 'Cache key argument must be a string, but %s passed';
+    private const ERROR_INVALID_KEY = 'Cache key must be a string, but %s passed';
 
     /**
      * @var string
      */
-    private const ERROR_INVALID_KEYS = 'Cache keys argument must be an array of strings, but %s passed';
+    private const ERROR_INVALID_KEYS = 'Cache keys must be an array<string>, but %s passed';
 
     /**
      * @var string
      */
-    private const ERROR_INVALID_VALUES = 'Cache values argument must be an array<string, mixed>, but %s passed';
+    private const ERROR_INVALID_VALUES = 'Cache values must be an array<string, mixed>, but %s passed';
 
     /**
      * @var string
@@ -71,7 +72,7 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
     /**
      * @var RPCInterface
      */
-    private RPCInterface $rpc;
+    protected RPCInterface $rpc;
 
     /**
      * @var string
@@ -81,7 +82,7 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
     /**
      * @var \DateTimeZone
      */
-    private \DateTimeZone $zone;
+    protected \DateTimeZone $zone;
 
     /**
      * @param RPCInterface $rpc
@@ -95,6 +96,14 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
         $this->zone = new \DateTimeZone('UTC');
 
         $this->setSerializer($serializer ?? new DefaultSerializer());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     /**
@@ -128,7 +137,7 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
         } catch (KeyValueException $e) {
             if (\str_contains($e->getMessage(), '_plugin_ttl')) {
                 $message = \sprintf(self::ERROR_TTL_NOT_AVAILABLE, $this->name);
-                throw new KeyValueException($message, (int)$e->getCode(), $e);
+                throw new NotImplementedException($message, (int)$e->getCode(), $e);
             }
 
             throw $e;
@@ -195,12 +204,14 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
     /**
      * @param iterable<string> $keys
      * @return Request
+     * @throws InvalidArgumentException
      */
     private function requestKeys(iterable $keys): Request
     {
         $items = [];
 
         foreach ($keys as $key) {
+            $this->assertValidKey($key);
             $items[] = new Item(['key' => $key]);
         }
 
@@ -237,6 +248,10 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
      */
     public function get($key, $default = null)
     {
+        if (!\is_string($key)) {
+            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
+        }
+
         /** @psalm-suppress MixedAssignment */
         foreach ($this->getMultiple([$key], $default) as $value) {
             return $value;
@@ -334,6 +349,7 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
      * @param iterable<string, mixed> $values
      * @param string $ttl
      * @return Request
+     * @throws InvalidArgumentException
      * @throws SerializationException
      */
     private function requestValues(iterable $values, string $ttl): Request
@@ -343,6 +359,8 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
 
         /** @psalm-suppress MixedAssignment */
         foreach ($values as $key => $value) {
+            $this->assertValidKey($key);
+
             $items[] = new Item([
                 'key'     => $key,
                 'value'   => $serializer->serialize($value),
@@ -391,6 +409,8 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
      *
      * Returns the current time as a DateTimeImmutable instance.
      *
+     * @codeCoverageIgnore Ignore time-aware-mutable value.
+     *                     Must be covered with a stub.
      * @return \DateTimeImmutable
      * @throws \Exception
      */
@@ -400,15 +420,23 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
     }
 
     /**
+     * Note: The current PSR-16 implementation always returns true or
+     * exception on error.
+     *
      * {@inheritDoc}
      * @throws KeyValueException
      */
     public function delete($key): bool
     {
+        $this->assertValidKey($key);
+
         return $this->deleteMultiple([$key]);
     }
 
     /**
+     * Note: The current PSR-16 implementation always returns true or
+     * exception on error.
+     *
      * {@inheritDoc}
      *
      * @psalm-param iterable<string> $keys
@@ -430,7 +458,7 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
      */
     public function clear(): bool
     {
-        throw new \LogicException(__METHOD__ . ' not implemented yet');
+        throw new NotImplementedException(__METHOD__ . '() not implemented yet');
     }
 
     /**
@@ -441,11 +469,16 @@ final class Cache implements TtlAwareCacheInterface, SerializerAwareInterface
     {
         $this->assertValidKey($key);
 
-        /** @var positive-int|0 $count */
-        $count = $this->call('kv.Has', $this->requestKeys([$key]))
-            ->getItems()
-            ->count();
+        /** @var array<Item> $items */
+        $items = $this->call('kv.Has', $this->requestKeys([$key]))
+            ->getItems();
 
-        return $count !== 0;
+        foreach ($items as $item) {
+            if ($item->getKey() === $key) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

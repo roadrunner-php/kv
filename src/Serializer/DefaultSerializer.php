@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Serializer;
 
+use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
+
 class DefaultSerializer implements SerializerInterface
 {
     /**
@@ -26,6 +28,8 @@ class DefaultSerializer implements SerializerInterface
      */
     public function unserialize(string $value)
     {
+        // Deserialization optimizations
+        // @codeCoverageIgnoreStart
         switch ($value) {
             case 'N;':
                 return null;
@@ -36,9 +40,19 @@ class DefaultSerializer implements SerializerInterface
             case 'b:1;':
                 return true;
         }
+        // @codeCoverageIgnoreEnd
 
-        return \unserialize($value, [
-            'allowed_classes' => true
+        \error_clear_last();
+
+        $result = @\unserialize($value, [
+            'allowed_classes' => true,
         ]);
+
+        if (($err = \error_get_last()) !== null) {
+            $exception = new \ErrorException($err['message'], 0, $err['type'], $err['file'], $err['line']);
+            throw new SerializationException($err['message'], $err['type'], $exception);
+        }
+
+        return $result;
     }
 }

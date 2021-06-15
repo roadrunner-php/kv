@@ -37,7 +37,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Spiral\\KV\\Tests\\": "tests"
+            "Spiral\\RoadRunner\\KeyValue\\Tests\\": "tests"
         }
     },
     "scripts": {
