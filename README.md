@@ -1,4 +1,8 @@
-# RoadRunner: KeyValue Storage
+# RoadRunner KV Plugin Bridge
+
+[![Latest Stable Version](https://poser.pugx.org/spiral/roadrunner-kv/version)](https://packagist.org/packages/spiral/roadrunner-kv)
+[![Build Status](https://github.com/spiral/roadrunner-kv/workflows/build/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
+[![Codecov](https://codecov.io/gh/spiral/roadrunner-kv/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/roadrunner-kv/)
 
 This repository contains the codebase PSR-16 PHP cache bridge using kv RoadRunner plugin.
 

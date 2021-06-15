@@ -1,7 +1,7 @@
 {
-    "name": "spiral/kv",
+    "name": "spiral/roadrunner-kv",
     "type": "library",
-    "description": "Spiral: key-value storage providers",
+    "description": "RoadRunner kv plugin bridge",
     "license": "MIT",
     "authors": [
         {
