@@ -48,11 +48,12 @@ RoadRunner server.
 ```php
 <?php
 
+use Spiral\Goridge\RPC\RPC;
+use Spiral\RoadRunner\KeyValue\Factory;
+
 require __DIR__ . '/vendor/autoload.php';
 
-$factory = new \Spiral\RoadRunner\KeyValue\Factory(
-    \Spiral\Goridge\RPC\RPC::create('tcp://127.0.0.1:6001')
-);
+$factory = new Factory(RPC::create('tcp://127.0.0.1:6001'));
 
 if (!$factory->isAvailable()) {
     throw new \LogicException('The [kv] plugin not available');
