@@ -13,6 +13,8 @@ namespace Spiral\RoadRunner\KeyValue\Tests\Stub;
 
 use Spiral\Goridge\RPC\Codec\JsonCodec;
 use Spiral\Goridge\RPC\CodecInterface;
+use Spiral\Goridge\RPC\Exception\RPCException;
+use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\Goridge\RPC\RPCInterface;
 
 class RPCConnectionStub implements RPCInterface
@@ -53,7 +55,9 @@ class RPCConnectionStub implements RPCInterface
      */
     public function call(string $method, $payload, $options = null)
     {
-        $result = $this->mapping[$method] ?? '';
+        $result = $this->mapping[$method] ?? function () use ($method) {
+            throw new ServiceException('RPC: can\'t find method ' . $method);
+        };
 
         if ($result instanceof \Closure) {
             $result = $result($payload);
