@@ -475,7 +475,7 @@ class Cache implements StorageInterface
     public function clear(): bool
     {
         try {
-            $this->call('kv.Clears', $this->request([]));
+            $this->call('kv.Clear', $this->request([]));
         } catch (KeyValueException $e) {
             if (\str_contains($e->getMessage(), 'can\'t find method kv.Clear')) {
                 throw new KeyValueException(self::ERROR_CLEAR_NOT_AVAILABLE, (int)$e->getCode(), $e);
