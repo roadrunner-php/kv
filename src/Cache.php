@@ -48,6 +48,14 @@ class Cache implements StorageInterface
         'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
         'use another driver for the storage if you require this functionality';
 
+
+    /**
+     * @var string
+     */
+    private const ERROR_CLEAR_NOT_AVAILABLE =
+        'RoadRunner does not support kv.Clear RPC method. Please ' .
+        'make sure you are using RoadRunner v2.3.1 or higher.';
+
     /**
      * @var string
      */
@@ -466,7 +474,17 @@ class Cache implements StorageInterface
      */
     public function clear(): bool
     {
-        throw new NotImplementedException(__METHOD__ . '() not implemented yet');
+        try {
+            $this->call('kv.Clear', $this->request([]));
+        } catch (KeyValueException $e) {
+            if (\str_contains($e->getMessage(), 'can\'t find method kv.Clear')) {
+                throw new KeyValueException(self::ERROR_CLEAR_NOT_AVAILABLE, (int)$e->getCode(), $e);
+            }
+
+            throw $e;
+        }
+
+        return true;
     }
 
     /**

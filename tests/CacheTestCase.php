@@ -369,13 +369,36 @@ class CacheTestCase extends TestCase
         $this->assertFalse($driver->has('__invalid_key__'));
     }
 
-    public function testClearNotAvailable(): void
+    public function testClear(): void
     {
-        $this->expectException(NotImplementedException::class);
-        $this->expectExceptionMessage(Cache::class . '::clear() not implemented yet');
+        $driver = $this->cache(['kv.Clear' => $this->response()]);
+
+        $result = $driver->clear();
+
+        $this->assertTrue($result);
+    }
+
+    public function testClearError(): void
+    {
+        $this->expectException(KeyValueException::class);
+        $this->expectExceptionMessage('Something went wrong');
+
+        $driver = $this->cache(['kv.Clear' => function () {
+            throw new ServiceException('Something went wrong');
+        }]);
+
+        $driver->clear();
+    }
+
+    public function testClearMethodNotFoundError(): void
+    {
+        $this->expectException(KeyValueException::class);
+        $this->expectExceptionMessage(
+            'RoadRunner does not support kv.Clear RPC method. ' .
+            'Please make sure you are using RoadRunner v2.3.1 or higher.'
+        );
 
         $driver = $this->cache();
-
         $driver->clear();
     }
 
@@ -568,7 +591,7 @@ class CacheTestCase extends TestCase
 
     public function testDelete(): void
     {
-        $driver = $this->cache();
+        $driver = $this->cache(['kv.Delete' => $this->response([])]);
         $this->assertTrue($driver->delete('key'));
     }
 
@@ -587,7 +610,7 @@ class CacheTestCase extends TestCase
 
     public function testDeleteMultiple(): void
     {
-        $driver = $this->cache();
+        $driver = $this->cache(['kv.Delete' => $this->response([])]);
         $this->assertTrue($driver->deleteMultiple(['key', 'key2']));
     }
 

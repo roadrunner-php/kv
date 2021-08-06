@@ -13,6 +13,7 @@ namespace PHPSTORM_META {
         'kv.MExpire',
         'kv.TTL',
         'kv.Delete',
+        'kv.Clear',
     );
 
     expectedArguments(\Spiral\Goridge\RPC\RPCInterface::call(), 0,
