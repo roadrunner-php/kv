@@ -4,11 +4,11 @@ rpc:
 kv:
   test:
     driver: memory
-    interval: 1
+    config:
+      interval: 1
   test-2:
       driver: boltdb
-      dir: "."
-      file: "rr.db"
-      bucket: "test"
-      permissions: 0666
-      interval: 1 # seconds
+      config:
+        file: "rr.db"
+        permissions: 0777
+        interval: 10 # seconds
