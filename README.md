@@ -28,12 +28,16 @@ First you need to add at least one kv adapter to your roadrunner configuration.
 For example, such a configuration would be quite feasible to run:
 
 ```yaml
+version: '2.7'
+
 rpc:
   listen: tcp://127.0.0.1:6001
 
 kv:
   test:
     driver: memory
+    config:
+        interval: 10
 ```
 
 > Read more about all available drivers on the 
