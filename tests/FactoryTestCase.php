@@ -31,33 +31,6 @@ class FactoryTestCase extends TestCase
         $this->factory();
     }
 
-    public function testIsAvailable(): void
-    {
-        $factory = $this->factory(['informer.List' => '["kv"]']);
-        $this->assertTrue($factory->isAvailable());
-    }
-
-    public function testNotAvailable(): void
-    {
-        $factory = $this->factory(['informer.List' => '[]']);
-        $this->assertFalse($factory->isAvailable());
-    }
-
-    public function testNotAvailableOnNonArrayResponse(): void
-    {
-        $factory = $this->factory(['informer.List' => '42']);
-        $this->assertFalse($factory->isAvailable());
-    }
-
-    public function testNotAvailableOnErrorResponse(): void
-    {
-        $factory = $this->factory(['informer.List' => (static function () {
-            throw new \Exception();
-        })]);
-
-        $this->assertFalse($factory->isAvailable());
-    }
-
     public function testSuccessSelectOfUnknownStorage(): void
     {
         $name = \random_bytes(32);

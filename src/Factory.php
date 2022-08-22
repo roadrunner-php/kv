@@ -40,24 +40,11 @@ final class Factory implements FactoryInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @deprecated Information about RoadRunner plugins is not available since RoadRunner version 2.2
      */
     public function isAvailable(): bool
     {
-        try {
-            /** @var array<string>|mixed $result */
-            $result = $this->rpc
-                ->withCodec(new JsonCodec())
-                ->call('informer.List', true);
-
-            if (! \is_array($result)) {
-                return false;
-            }
-
-            return \in_array('kv', $result, true);
-        } catch (\Throwable $e) {
-            return false;
-        }
+        throw new \RuntimeException(\sprintf('%s::isAvailable method is deprecated.', self::class));
     }
 
     /**
