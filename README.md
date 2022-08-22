@@ -59,10 +59,6 @@ require __DIR__ . '/vendor/autoload.php';
 
 $factory = new Factory(RPC::create('tcp://127.0.0.1:6001'));
 
-if (!$factory->isAvailable()) {
-    throw new \LogicException('The [kv] plugin not available');
-}
-
 $cache = $factory->select('test');
 
 // After that you can write and read arbitrary values:
