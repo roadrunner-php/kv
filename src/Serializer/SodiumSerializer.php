@@ -15,19 +15,11 @@ use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 
 class SodiumSerializer implements SerializerInterface
 {
-    /**
-     * @var SerializerInterface
-     */
     private SerializerInterface $serializer;
 
-    /**
-     * @var string
-     */
     private string $key;
 
     /**
-     * @param SerializerInterface $serializer
-     *
      * @param string $key The key is used to decrypt and encrypt values;
      *                    The key must be generated using {@see sodium_crypto_box_keypair()}.
      */
@@ -41,19 +33,15 @@ class SodiumSerializer implements SerializerInterface
 
     /**
      * @codeCoverageIgnore Reason: Ignore environment-aware assertions
-     * @return void
      */
     private function assertAvailable(): void
     {
-        if (!\function_exists('\\sodium_crypto_box_seal')) {
+        if (! \function_exists('\\sodium_crypto_box_seal')) {
             throw new \LogicException('The "ext-sodium" PHP extension is not available');
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function serialize($value): string
+    public function serialize(mixed $value): string
     {
         try {
             return \sodium_crypto_box_seal(
@@ -65,17 +53,14 @@ class SodiumSerializer implements SerializerInterface
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function unserialize(string $value)
+    public function unserialize(string $value): mixed
     {
         try {
             $result = \sodium_crypto_box_seal_open($value, $this->key);
 
             if ($result === false) {
                 throw new SerializationException(
-                    'Can not decode the received data. Please make sure ' .
+                    'Can not decode the received data. Please make sure '.
                     'the encryption key matches the one used to encrypt this data'
                 );
             }

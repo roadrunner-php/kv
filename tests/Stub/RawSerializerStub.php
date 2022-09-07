@@ -20,7 +20,7 @@ class RawSerializerStub implements SerializerInterface
         return $value;
     }
 
-    public function unserialize(string $value)
+    public function unserialize(string $value): mixed
     {
         return $value;
     }

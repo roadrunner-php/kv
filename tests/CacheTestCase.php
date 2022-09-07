@@ -627,15 +627,6 @@ class CacheTestCase extends TestCase
         $driver->deleteMultiple(['key', 'key2']);
     }
 
-    public function testGetWithInvalidKey(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
-
-        $driver = $this->cache();
-        $driver->get(0xDEAD_BEEF);
-    }
-
     public function testGetMultipleWithInvalidKey(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -647,25 +638,6 @@ class CacheTestCase extends TestCase
         }
     }
 
-    public function testGetMultipleWithInvalidValue(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache keys must be an array<string>, but int passed');
-
-        $driver = $this->cache();
-        foreach ($driver->getMultiple(0xDEAD_BEEF) as $_) {
-        }
-    }
-
-    public function testSetWithInvalidKey(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
-
-        $driver = $this->cache();
-        $driver->set(0xDEAD_BEEF, 'value');
-    }
-
     public function testSetMultipleWithInvalidKey(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -675,24 +647,6 @@ class CacheTestCase extends TestCase
         $driver->setMultiple([0 => 0xDEAD_BEEF]);
     }
 
-    public function testSetMultipleWithInvalidValue(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache values must be an array<string, mixed>, but int passed');
-
-        $driver = $this->cache();
-        $driver->setMultiple(0xDEAD_BEEF);
-    }
-
-    public function testDeleteWithInvalidKey(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
-
-        $driver = $this->cache();
-        $driver->delete(0xDEAD_BEEF);
-    }
-
     public function testDeleteMultipleWithInvalidKey(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -700,24 +654,6 @@ class CacheTestCase extends TestCase
 
         $driver = $this->cache();
         $driver->deleteMultiple([0 => 0xDEAD_BEEF]);
-    }
-
-    public function testDeleteMultipleWithInvalidValue(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache keys must be an array<string>, but int passed');
-
-        $driver = $this->cache();
-        $driver->deleteMultiple(0xDEAD_BEEF);
-    }
-
-    public function testHasWithInvalidValue(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
-
-        $driver = $this->cache();
-        $driver->has(0xDEAD_BEEF);
     }
 
     public function testImmutableWhileSwitchSerialization(): void

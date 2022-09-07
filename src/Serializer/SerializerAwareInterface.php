@@ -14,13 +14,9 @@ namespace Spiral\RoadRunner\KeyValue\Serializer;
 interface SerializerAwareInterface
 {
     /**
-     * @param SerializerInterface $serializer
      * @return $this
      */
     public function withSerializer(SerializerInterface $serializer): self;
 
-    /**
-     * @return SerializerInterface
-     */
     public function getSerializer(): SerializerInterface;
 }

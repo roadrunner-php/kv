@@ -13,14 +13,8 @@ namespace Spiral\RoadRunner\KeyValue\Serializer;
 
 trait SerializerAwareTrait
 {
-    /**
-     * @var SerializerInterface
-     */
     protected SerializerInterface $serializer;
 
-    /**
-     * @param SerializerInterface $serializer
-     */
     protected function setSerializer(SerializerInterface $serializer): void
     {
         $this->serializer = $serializer;
@@ -38,9 +32,6 @@ trait SerializerAwareTrait
         return $self;
     }
 
-    /**
-     * @return SerializerInterface
-     */
     public function getSerializer(): SerializerInterface
     {
         return $this->serializer;
