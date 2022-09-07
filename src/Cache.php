@@ -284,7 +284,7 @@ class Cache implements StorageInterface
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
-    public function getMultiple($keys, $default = null)
+    public function getMultiple($keys, $default = null): iterable
     {
         $this->assertValidKeys($keys);
 
