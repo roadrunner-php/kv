@@ -260,10 +260,6 @@ class Cache implements StorageInterface
      */
     public function get($key, $default = null)
     {
-        if (!\is_string($key)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
-        }
-
         /** @psalm-suppress MixedAssignment */
         foreach ($this->getMultiple([$key], $default) as $value) {
             return $value;
@@ -282,6 +278,7 @@ class Cache implements StorageInterface
      * @psalm-param iterable<string> $keys
      * @psalm-param mixed $default
      * @psalm-suppress MoreSpecificImplementedParamType
+     * @return iterable<string, mixed>
      * @throws KeyValueException
      */
     public function getMultiple($keys, $default = null): iterable
