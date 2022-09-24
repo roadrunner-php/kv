@@ -16,7 +16,7 @@
     "require": {
         "php": ">=7.4",
         "ext-json": "*",
-        "psr/simple-cache": "^1.0",
+        "psr/simple-cache": "1 - 2",
         "symfony/polyfill-php80": "^1.23",
         "spiral/roadrunner": "^2.0",
         "spiral/goridge": "^3.1",
