@@ -1,8 +1,13 @@
 # RoadRunner KV Plugin Bridge
 
-[![Latest Stable Version](https://poser.pugx.org/spiral/roadrunner-kv/version)](https://packagist.org/packages/spiral/roadrunner-kv)
-[![Build Status](https://github.com/spiral/roadrunner-kv/workflows/build/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
+[![PHP Version Require](https://poser.pugx.org/spiral/roadrunner-kv/require/php)](https://packagist.org/packages/spiral/roadrunner-kv)
+[![Latest Stable Version](https://poser.pugx.org/spiral/roadrunner-kv/v/stable)](https://packagist.org/packages/spiral/roadrunner-kv)
+[![phpunit](https://github.com/spiral/roadrunner-kv/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
+[![psalm](https://github.com/spiral/roadrunner-kv/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
 [![Codecov](https://codecov.io/gh/spiral/roadrunner-kv/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/roadrunner-kv/)
+[![Total Downloads](https://poser.pugx.org/spiral/roadrunner-kv/downloads)](https://packagist.org/spiral/roadrunner-kv/phpunit)
+
+<b>[Documentation](https://roadrunner.dev/docs/plugins-kv/2.x/en)</b> | [Framework Bundle](https://github.com/spiral/framework)
 
 This repository contains the codebase PSR-16 PHP cache bridge using kv RoadRunner plugin.
 
@@ -11,15 +16,15 @@ This repository contains the codebase PSR-16 PHP cache bridge using kv RoadRunne
 To install application server and KV codebase
 
 ```bash
-$ composer require spiral/roadrunner-kv
+composer require spiral/roadrunner-kv
 ```
 
 You can use the convenient installer to download the latest available compatible
 version of RoadRunner assembly:
 
 ```bash
-$ composer require spiral/roadrunner-cli --dev
-$ vendor/bin/rr get
+composer require spiral/roadrunner-cli --dev
+vendor/bin/rr get
 ```
 
 ## Usage
@@ -68,7 +73,6 @@ $cache->set('key', 'value');
 echo $cache->get('key'); // string(5) "value"
 ```
 
-## License
+## License:
 
-The MIT License (MIT). Please see [`LICENSE`](./LICENSE) for more information. Maintained
-by [Spiral Scout](https://spiralscout.com).
+MIT License (MIT). Please see [`LICENSE`](./LICENSE) for more information. Maintained by [Spiral Scout](https://spiralscout.com).
