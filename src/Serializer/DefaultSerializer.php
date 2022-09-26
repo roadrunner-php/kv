@@ -15,18 +15,12 @@ use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 
 class DefaultSerializer implements SerializerInterface
 {
-    /**
-     * {@inheritDoc}
-     */
-    public function serialize($value): string
+    public function serialize(mixed $value): string
     {
         return \serialize($value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function unserialize(string $value)
+    public function unserialize(string $value): mixed
     {
         // Deserialization optimizations
         // @codeCoverageIgnoreStart

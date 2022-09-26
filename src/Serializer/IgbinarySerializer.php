@@ -13,20 +13,11 @@ namespace Spiral\RoadRunner\KeyValue\Serializer;
 
 class IgbinarySerializer implements SerializerInterface
 {
-    /**
-     * @var string
-     */
     private const SUPPORTED_VERSION_MIN = '3.1.6';
 
-    /**
-     * @var string
-     */
     private const ERROR_NOT_AVAILABLE =
         'The "ext-igbinary" PHP extension is not available';
 
-    /**
-     * @var string
-     */
     private const ERROR_NON_COMPATIBLE =
         'Current version of the "ext-igbinary" PHP extension (v%s) does not meet the requirements, ' .
         'version v' . self::SUPPORTED_VERSION_MIN . ' or higher required';
@@ -42,7 +33,6 @@ class IgbinarySerializer implements SerializerInterface
 
     /**
      * @codeCoverageIgnore Reason: Ignore environment-aware assertions
-     * @return void
      */
     private function assertAvailable(): void
     {
@@ -55,18 +45,12 @@ class IgbinarySerializer implements SerializerInterface
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function serialize($value): string
+    public function serialize(mixed $value): string
     {
         return \igbinary_serialize($value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function unserialize(string $value)
+    public function unserialize(string $value): mixed
     {
         return \igbinary_unserialize($value);
     }

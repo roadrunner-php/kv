@@ -22,7 +22,6 @@ use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
 use Spiral\RoadRunner\KeyValue\Exception\NotImplementedException;
 use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 use Spiral\RoadRunner\KeyValue\Exception\StorageException;
-use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareTrait;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
@@ -34,69 +33,31 @@ class Cache implements StorageInterface
 {
     use SerializerAwareTrait;
 
-    /**
-     * @var string
-     */
     private const ERROR_INVALID_STORAGE =
-        'Storage "%s" has not been defined. Please make sure your ' .
+        'Storage "%s" has not been defined. Please make sure your '.
         'RoadRunner "kv" configuration contains a storage key named "%1$s"';
 
-    /**
-     * @var string
-     */
     private const ERROR_TTL_NOT_AVAILABLE =
-        'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
+        'Storage "%s" does not support kv.TTL RPC method execution. Please '.
         'use another driver for the storage if you require this functionality';
 
-
-    /**
-     * @var string
-     */
     private const ERROR_CLEAR_NOT_AVAILABLE =
-        'RoadRunner does not support kv.Clear RPC method. Please ' .
+        'RoadRunner does not support kv.Clear RPC method. Please '.
         'make sure you are using RoadRunner v2.3.1 or higher.';
 
-    /**
-     * @var string
-     */
     private const ERROR_INVALID_KEY = 'Cache key must be a string, but %s passed';
 
-    /**
-     * @var string
-     */
     private const ERROR_INVALID_KEYS = 'Cache keys must be an array<string>, but %s passed';
 
-    /**
-     * @var string
-     */
     private const ERROR_INVALID_VALUES = 'Cache values must be an array<string, mixed>, but %s passed';
 
-    /**
-     * @var string
-     */
     private const ERROR_INVALID_INTERVAL_ARGUMENT =
         'Cache item ttl (expiration) must be of type int or \DateInterval, but %s passed';
 
-    /**
-     * @var RPCInterface
-     */
     protected RPCInterface $rpc;
-
-    /**
-     * @var string
-     */
     private string $name;
-
-    /**
-     * @var \DateTimeZone
-     */
     protected \DateTimeZone $zone;
 
-    /**
-     * @param RPCInterface $rpc
-     * @param string $name
-     * @param SerializerInterface|null $serializer
-     */
     public function __construct(RPCInterface $rpc, string $name, SerializerInterface $serializer = null)
     {
         $this->name = $name;
@@ -106,16 +67,12 @@ class Cache implements StorageInterface
         $this->setSerializer($serializer ?? new DefaultSerializer());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * {@inheritDoc}
      * @throws KeyValueException
      */
     public function getTtl(string $key): ?\DateTimeInterface
@@ -134,14 +91,10 @@ class Cache implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
      * @throws KeyValueException
      */
     public function getMultipleTtl(iterable $keys = []): iterable
     {
-        /** @psalm-suppress RedundantCondition */
-        $this->assertValidKeys($keys);
-
         try {
             $response = $this->createIndex(
                 $this->call('kv.TTL', $this->requestKeys($keys))
@@ -163,18 +116,6 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @param mixed|array<string> $keys
-     * @throws InvalidArgumentException
-     */
-    private function assertValidKeys($keys): void
-    {
-        if (! \is_iterable($keys)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEYS, \get_debug_type($keys)));
-        }
-    }
-
-    /**
-     * @param Response $response
      * @return array<string, Item>
      */
     private function createIndex(Response $response): array
@@ -193,9 +134,6 @@ class Cache implements StorageInterface
      * @psalm-suppress MixedReturnStatement
      * @psalm-suppress MixedInferredReturnType
      *
-     * @param string $method
-     * @param Request $request
-     * @return Response
      * @throws KeyValueException
      */
     private function call(string $method, Request $request): Response
@@ -215,7 +153,6 @@ class Cache implements StorageInterface
 
     /**
      * @param iterable<string> $keys
-     * @return Request
      * @throws InvalidArgumentException
      */
     private function requestKeys(iterable $keys): Request
@@ -232,18 +169,16 @@ class Cache implements StorageInterface
 
     /**
      * @param array<Item> $items
-     * @return Request
      */
     private function request(array $items): Request
     {
         return new Request([
             'storage' => $this->name,
-            'items'   => $items,
+            'items' => $items,
         ]);
     }
 
     /**
-     * @param string $time
      * @return \DateTimeImmutable
      *
      * @psalm-suppress InvalidFalsableReturnType
@@ -255,10 +190,9 @@ class Cache implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
      * @throws KeyValueException
      */
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         /** @psalm-suppress MixedAssignment */
         foreach ($this->getMultiple([$key], $default) as $value) {
@@ -273,18 +207,12 @@ class Cache implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @psalm-param iterable<string> $keys
-     * @psalm-param mixed $default
-     * @psalm-suppress MoreSpecificImplementedParamType
      * @return iterable<string, mixed>
      * @throws KeyValueException
      */
-    public function getMultiple($keys, $default = null): iterable
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        $this->assertValidKeys($keys);
-
         /** @psalm-suppress MixedArgumentTypeCoercion */
         $items = $this->createIndex(
             $this->call('kv.MGet', $this->requestKeys($keys))
@@ -304,18 +232,12 @@ class Cache implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @psalm-param string $key
-     * @psalm-param mixed $value
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
-    public function set($key, $value, $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
-        $this->assertValidKey($key);
-
         return $this->setMultiple([$key => $value], $ttl);
     }
 
@@ -331,38 +253,20 @@ class Cache implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @psalm-param iterable<string, mixed> $values
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
-    public function setMultiple($values, $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
-        $this->assertValidValues($values);
-
         $this->call('kv.Set', $this->requestValues($values, $this->ttlToRfc3339String($ttl)));
 
         return true;
     }
 
     /**
-     * @param mixed|array<string, mixed> $values
-     * @throws InvalidArgumentException
-     */
-    private function assertValidValues($values): void
-    {
-        if (! \is_iterable($values)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_VALUES, \get_debug_type($values)));
-        }
-    }
-
-    /**
      * @param iterable<string, mixed> $values
-     * @param string $ttl
-     * @return Request
-     * @throws InvalidArgumentException
      * @throws SerializationException
      */
     private function requestValues(iterable $values, string $ttl): Request
@@ -375,9 +279,9 @@ class Cache implements StorageInterface
             $this->assertValidKey($key);
 
             $items[] = new Item([
-                'key'     => $key,
-                'value'   => $serializer->serialize($value),
-                'timeout' => $ttl
+                'key' => $key,
+                'value' => $serializer->serialize($value),
+                'timeout' => $ttl,
             ]);
         }
 
@@ -385,11 +289,9 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @param null|int|\DateInterval $ttl
-     * @return string
      * @throws InvalidArgumentException
      */
-    private function ttlToRfc3339String($ttl): string
+    private function ttlToRfc3339String(null|int|\DateInterval $ttl): string
     {
         if ($ttl === null) {
             return '';
@@ -398,21 +300,12 @@ class Cache implements StorageInterface
         if ($ttl instanceof \DateInterval) {
             return $this->now()
                 ->add($ttl)
-                ->format(\DateTimeInterface::RFC3339)
-            ;
+                ->format(\DateTimeInterface::RFC3339);
         }
 
-        if (\is_int($ttl)) {
-            $now = $this->now();
+        $now = $this->now();
 
-            return $now->setTimestamp($ttl + $now->getTimestamp())
-                ->format(\DateTimeInterface::RFC3339)
-            ;
-        }
-
-        throw new InvalidArgumentException(
-            \sprintf(self::ERROR_INVALID_INTERVAL_ARGUMENT, \get_debug_type($ttl))
-        );
+        return $now->setTimestamp($ttl + $now->getTimestamp())->format(\DateTimeInterface::RFC3339);
     }
 
     /**
@@ -424,7 +317,6 @@ class Cache implements StorageInterface
      *
      * @codeCoverageIgnore Ignore time-aware-mutable value.
      *                     Must be covered with a stub.
-     * @return \DateTimeImmutable
      * @throws \Exception
      */
     protected function now(): \DateTimeImmutable
@@ -436,13 +328,10 @@ class Cache implements StorageInterface
      * Note: The current PSR-16 implementation always returns true or
      * exception on error.
      *
-     * {@inheritDoc}
      * @throws KeyValueException
      */
-    public function delete($key): bool
+    public function delete(string $key): bool
     {
-        $this->assertValidKey($key);
-
         return $this->deleteMultiple([$key]);
     }
 
@@ -453,21 +342,18 @@ class Cache implements StorageInterface
      * {@inheritDoc}
      *
      * @psalm-param iterable<string> $keys
-     * @psalm-suppress MoreSpecificImplementedParamType
+     *
      * @throws KeyValueException
      */
-    public function deleteMultiple($keys): bool
+    public function deleteMultiple(iterable $keys): bool
     {
-        $this->assertValidKeys($keys);
-
-        /** @psalm-suppress MixedArgumentTypeCoercion */
         $this->call('kv.Delete', $this->requestKeys($keys));
 
         return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @throws KeyValueException
      */
     public function clear(): bool
     {
@@ -485,13 +371,10 @@ class Cache implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
      * @throws KeyValueException
      */
-    public function has($key): bool
+    public function has(string $key): bool
     {
-        $this->assertValidKey($key);
-
         /** @var array<Item> $items */
         $items = $this->call('kv.Has', $this->requestKeys([$key]))
             ->getItems();

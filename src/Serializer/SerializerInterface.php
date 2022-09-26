@@ -16,16 +16,12 @@ use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 interface SerializerInterface
 {
     /**
-     * @param mixed $value
-     * @return string
      * @throws SerializationException
      */
-    public function serialize($value): string;
+    public function serialize(mixed $value): string;
 
     /**
-     * @param string $value
-     * @return mixed
      * @throws SerializationException
      */
-    public function unserialize(string $value);
+    public function unserialize(string $value): mixed;
 }
