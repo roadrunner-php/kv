@@ -5,7 +5,7 @@
 [![phpunit](https://github.com/spiral/roadrunner-kv/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
 [![psalm](https://github.com/spiral/roadrunner-kv/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
 [![Codecov](https://codecov.io/gh/spiral/roadrunner-kv/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/roadrunner-kv/)
-[![Total Downloads](https://poser.pugx.org/spiral/roadrunner-kv/downloads)](https://packagist.org/spiral/roadrunner-kv/phpunit)
+[![Total Downloads](https://poser.pugx.org/spiral/roadrunner-kv/downloads)](https://packagist.org/packages/spiral/roadrunner-kv)
 
 <b>[Documentation](https://roadrunner.dev/docs/plugins-kv/2.x/en)</b> | [Framework Bundle](https://github.com/spiral/framework)
 
