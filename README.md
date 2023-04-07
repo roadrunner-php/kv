@@ -20,7 +20,7 @@ composer require spiral/roadrunner-kv
 ```
 
 You can use the convenient installer to download the latest available compatible
-version of RoadRunner assembly:
+version of RoadRunner server:
 
 ```bash
 composer require spiral/roadrunner-cli --dev
@@ -29,11 +29,11 @@ vendor/bin/rr get
 
 ## Usage
 
-First you need to add at least one kv adapter to your roadrunner configuration. 
+First you need to add at least one kv plugin to your roadrunner configuration. 
 For example, such a configuration would be quite feasible to run:
 
 ```yaml
-version: '2.7'
+version: '3.0'
 
 rpc:
   listen: tcp://127.0.0.1:6001
