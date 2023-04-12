@@ -1,21 +1,14 @@
 <?php
 
-/**
- * This file is part of RoadRunner package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
+use RoadRunner\KV\DTO\V1\Item;
+use RoadRunner\KV\DTO\V1\Request;
+use RoadRunner\KV\DTO\V1\Response;
 use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\RoadRunner\KeyValue\Cache;
-use Spiral\RoadRunner\KeyValue\DTO\V1\Item;
-use Spiral\RoadRunner\KeyValue\DTO\V1\Request;
-use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
 use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
 use Spiral\RoadRunner\KeyValue\Exception\NotImplementedException;
@@ -52,7 +45,7 @@ class CacheTestCase extends TestCase
      * @param array<string, mixed> $mapping
      * @param SerializerInterface|null $serializer
      */
-    private function cache(array $mapping = [], SerializerInterface $serializer = null): Cache
+    private function cache(array $mapping = [], SerializerInterface $serializer = new DefaultSerializer()): Cache
     {
         return new Cache($this->rpc($mapping), $this->name, $serializer);
     }
@@ -65,10 +58,10 @@ class CacheTestCase extends TestCase
         [$key, $expected] = [$this->randomString(), $this->now()];
 
         $driver = $this->cache([
-            'kv.TTL' => fn() => $this->response([
+            'kv.TTL' => fn () => $this->response([
                 new Item([
-                    'key'     => $key,
-                    'value'   => $serializer->serialize(null),
+                    'key' => $key,
+                    'value' => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -124,15 +117,15 @@ class CacheTestCase extends TestCase
         $expected = $this->now();
 
         $driver = $this->cache([
-            'kv.TTL' => fn() => $this->response([
+            'kv.TTL' => fn () => $this->response([
                 new Item([
-                    'key'     => $keys[0],
-                    'value'   => $serializer->serialize(null),
+                    'key' => $keys[0],
+                    'value' => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
                 new Item([
-                    'key'     => $keys[1],
-                    'value'   => $serializer->serialize(null),
+                    'key' => $keys[1],
+                    'value' => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -155,10 +148,10 @@ class CacheTestCase extends TestCase
         $expected = $this->now();
 
         $driver = $this->cache([
-            'kv.TTL' => fn() => $this->response([
+            'kv.TTL' => fn () => $this->response([
                 new Item([
-                    'key'     => $keys[0],
-                    'value'   => $serializer->serialize(null),
+                    'key' => $keys[0],
+                    'value' => $serializer->serialize(null),
                     'timeout' => $expected->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -180,10 +173,10 @@ class CacheTestCase extends TestCase
     public function testTtlWithInvalidResponseKey(SerializerInterface $serializer): void
     {
         $driver = $this->cache([
-            'kv.TTL' => fn() => $this->response([
+            'kv.TTL' => fn () => $this->response([
                 new Item([
-                    'key'     => $this->randomString(),
-                    'value'   => $serializer->serialize(null),
+                    'key' => $this->randomString(),
+                    'value' => $serializer->serialize(null),
                     'timeout' => $this->now()->format(\DateTimeInterface::RFC3339),
                 ]),
             ]),
@@ -198,15 +191,15 @@ class CacheTestCase extends TestCase
     public function methodsDataProvider(): array
     {
         return [
-            'getTtl'         => [fn(Cache $c) => $c->getTtl('key')],
-            'getMultipleTtl' => [fn(Cache $c) => $c->getMultipleTtl(['key'])],
-            'get'            => [fn(Cache $c) => $c->get('key')],
-            'set'            => [fn(Cache $c) => $c->set('key', 'value')],
-            'getMultiple'    => [fn(Cache $c) => $c->getMultiple(['key'])],
-            'setMultiple'    => [fn(Cache $c) => $c->setMultiple(['key' => 'value'])],
-            'deleteMultiple' => [fn(Cache $c) => $c->deleteMultiple(['key'])],
-            'delete'         => [fn(Cache $c) => $c->delete('key')],
-            'has'            => [fn(Cache $c) => $c->has('key')],
+            'getTtl' => [fn (Cache $c) => $c->getTtl('key')],
+            'getMultipleTtl' => [fn (Cache $c) => $c->getMultipleTtl(['key'])],
+            'get' => [fn (Cache $c) => $c->get('key')],
+            'set' => [fn (Cache $c) => $c->set('key', 'value')],
+            'getMultiple' => [fn (Cache $c) => $c->getMultiple(['key'])],
+            'setMultiple' => [fn (Cache $c) => $c->setMultiple(['key' => 'value'])],
+            'deleteMultiple' => [fn (Cache $c) => $c->deleteMultiple(['key'])],
+            'delete' => [fn (Cache $c) => $c->delete('key')],
+            'has' => [fn (Cache $c) => $c->has('key')],
         ];
     }
 
@@ -223,19 +216,21 @@ class CacheTestCase extends TestCase
 
         // Then expects message like that cache storage has not been defined
         $this->expectException(StorageException::class);
-        $this->expectExceptionMessage(\sprintf(
-            'Storage "%s" has not been defined. Please make sure your ' .
-            'RoadRunner "kv" configuration contains a storage key named "%1$s"',
-            $this->name
-        ));
+        $this->expectExceptionMessage(
+            \sprintf(
+                'Storage "%s" has not been defined. Please make sure your ' .
+                'RoadRunner "kv" configuration contains a storage key named "%1$s"',
+                $this->name,
+            ),
+        );
 
         $driver = $this->cache([
-            'kv.Has'     => $error,
-            'kv.Set'     => $error,
-            'kv.MGet'    => $error,
+            'kv.Has' => $error,
+            'kv.Set' => $error,
+            'kv.MGet' => $error,
             'kv.MExpire' => $error,
-            'kv.TTL'     => $error,
-            'kv.Delete'  => $error,
+            'kv.TTL' => $error,
+            'kv.Delete' => $error,
         ]);
 
         $result = $handler($driver);
@@ -255,11 +250,13 @@ class CacheTestCase extends TestCase
 
         // Then expects message like that TTL not available
         $this->expectException(NotImplementedException::class);
-        $this->expectExceptionMessage(\sprintf(
-            'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
-            'use another driver for the storage if you require this functionality',
-            $this->name
-        ));
+        $this->expectExceptionMessage(
+            \sprintf(
+                'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
+                'use another driver for the storage if you require this functionality',
+                $this->name,
+            ),
+        );
 
         $driver = $this->cache(['kv.TTL' => $error]);
 
@@ -383,9 +380,11 @@ class CacheTestCase extends TestCase
         $this->expectException(KeyValueException::class);
         $this->expectExceptionMessage('Something went wrong');
 
-        $driver = $this->cache(['kv.Clear' => function () {
-            throw new ServiceException('Something went wrong');
-        }]);
+        $driver = $this->cache([
+            'kv.Clear' => function () {
+                throw new ServiceException('Something went wrong');
+            },
+        ]);
 
         $driver->clear();
     }
@@ -395,7 +394,7 @@ class CacheTestCase extends TestCase
         $this->expectException(KeyValueException::class);
         $this->expectExceptionMessage(
             'RoadRunner does not support kv.Clear RPC method. ' .
-            'Please make sure you are using RoadRunner v2.3.1 or higher.'
+            'Please make sure you are using RoadRunner v2.3.1 or higher.',
         );
 
         $driver = $this->cache();
@@ -532,12 +531,12 @@ class CacheTestCase extends TestCase
 
     /**
      * @param array<string, mixed> $mapping
-     * @param SerializerInterface|null $serializer
+     * @param SerializerInterface $serializer
      */
     private function frozenDateCache(
         \DateTimeImmutable $date,
         array $mapping = [],
-        SerializerInterface $serializer = null
+        SerializerInterface $serializer = new DefaultSerializer(),
     ): Cache {
         return new FrozenDateCacheStub($date, $this->rpc($mapping), $this->name, $serializer);
     }
@@ -580,7 +579,7 @@ class CacheTestCase extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'Cache item ttl (expiration) must be of type int or \DateInterval, but ' . $type . ' passed'
+            'Cache item ttl (expiration) must be of type int or \DateInterval, but ' . $type . ' passed',
         );
 
         $driver = $this->cache();

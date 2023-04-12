@@ -1,18 +1,12 @@
 <?php
 
-/**
- * This file is part of RoadRunner package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests\Stub;
 
 use Spiral\Goridge\RPC\RPCInterface;
 use Spiral\RoadRunner\KeyValue\Cache;
+use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 
 final class FrozenDateCacheStub extends Cache
@@ -23,7 +17,7 @@ final class FrozenDateCacheStub extends Cache
         \DateTimeImmutable $date,
         RPCInterface $rpc,
         string $name,
-        SerializerInterface $serializer = null
+        SerializerInterface $serializer = new DefaultSerializer()
     ) {
         $this->date = $date;
 

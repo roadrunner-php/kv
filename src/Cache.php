@@ -1,22 +1,15 @@
 <?php
 
-/**
- * This file is part of RoadRunner package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue;
 
+use RoadRunner\KV\DTO\V1\Item;
+use RoadRunner\KV\DTO\V1\Request;
+use RoadRunner\KV\DTO\V1\Response;
 use Spiral\Goridge\RPC\Codec\ProtobufCodec;
 use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\Goridge\RPC\RPCInterface;
-use Spiral\RoadRunner\KeyValue\DTO\V1\Item;
-use Spiral\RoadRunner\KeyValue\DTO\V1\Request;
-use Spiral\RoadRunner\KeyValue\DTO\V1\Response;
 use Spiral\RoadRunner\KeyValue\Exception\InvalidArgumentException;
 use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
 use Spiral\RoadRunner\KeyValue\Exception\NotImplementedException;
@@ -54,17 +47,21 @@ class Cache implements StorageInterface
     private const ERROR_INVALID_INTERVAL_ARGUMENT =
         'Cache item ttl (expiration) must be of type int or \DateInterval, but %s passed';
 
-    protected RPCInterface $rpc;
-    private string $name;
-    protected \DateTimeZone $zone;
+    protected readonly RPCInterface $rpc;
+    protected readonly \DateTimeZone $zone;
 
-    public function __construct(RPCInterface $rpc, string $name, SerializerInterface $serializer = null)
-    {
-        $this->name = $name;
+    /**
+     * @param non-empty-string $name
+     */
+    public function __construct(
+        RPCInterface $rpc,
+        private readonly string $name,
+        SerializerInterface $serializer = new DefaultSerializer()
+    ) {
         $this->rpc = $rpc->withCodec(new ProtobufCodec());
         $this->zone = new \DateTimeZone('UTC');
 
-        $this->setSerializer($serializer ?? new DefaultSerializer());
+        $this->setSerializer($serializer);
     }
 
     public function getName(): string
@@ -102,7 +99,7 @@ class Cache implements StorageInterface
         } catch (KeyValueException $e) {
             if (\str_contains($e->getMessage(), '_plugin_ttl')) {
                 $message = \sprintf(self::ERROR_TTL_NOT_AVAILABLE, $this->name);
-                throw new NotImplementedException($message, (int)$e->getCode(), $e);
+                throw new NotImplementedException($message, $e->getCode(), $e);
             }
 
             throw $e;
@@ -147,7 +144,7 @@ class Cache implements StorageInterface
                 throw new StorageException(\sprintf(self::ERROR_INVALID_STORAGE, $this->name));
             }
 
-            throw new KeyValueException($message, (int)$e->getCode(), $e);
+            throw new KeyValueException($message, $e->getCode(), $e);
         }
     }
 
@@ -245,7 +242,7 @@ class Cache implements StorageInterface
      * @param mixed|string $key
      * @throws InvalidArgumentException
      */
-    private function assertValidKey($key): void
+    private function assertValidKey(mixed $key): void
     {
         if (! \is_string($key)) {
             throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
@@ -361,7 +358,7 @@ class Cache implements StorageInterface
             $this->call('kv.Clear', $this->request([]));
         } catch (KeyValueException $e) {
             if (\str_contains($e->getMessage(), 'can\'t find method kv.Clear')) {
-                throw new KeyValueException(self::ERROR_CLEAR_NOT_AVAILABLE, (int)$e->getCode(), $e);
+                throw new KeyValueException(self::ERROR_CLEAR_NOT_AVAILABLE, $e->getCode(), $e);
             }
 
             throw $e;

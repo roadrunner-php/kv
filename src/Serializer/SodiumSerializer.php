@@ -1,34 +1,22 @@
 <?php
 
-/**
- * This file is part of RoadRunner package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Serializer;
 
 use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 
-class SodiumSerializer implements SerializerInterface
+final class SodiumSerializer implements SerializerInterface
 {
-    private SerializerInterface $serializer;
-
-    private string $key;
-
     /**
      * @param string $key The key is used to decrypt and encrypt values;
      *                    The key must be generated using {@see sodium_crypto_box_keypair()}.
      */
-    public function __construct(SerializerInterface $serializer, string $key)
-    {
+    public function __construct(
+        private readonly SerializerInterface $serializer,
+        private readonly string $key
+    ) {
         $this->assertAvailable();
-
-        $this->key = $key;
-        $this->serializer = $serializer;
     }
 
     /**
@@ -49,7 +37,7 @@ class SodiumSerializer implements SerializerInterface
                 \sodium_crypto_box_publickey($this->key)
             );
         } catch (\SodiumException $e) {
-            throw new SerializationException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new SerializationException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -67,7 +55,7 @@ class SodiumSerializer implements SerializerInterface
 
             return $this->serializer->unserialize($result);
         } catch (\SodiumException $e) {
-            throw new SerializationException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new SerializationException($e->getMessage(), $e->getCode(), $e);
         }
     }
 }
