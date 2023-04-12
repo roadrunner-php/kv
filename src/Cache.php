@@ -40,13 +40,6 @@ class Cache implements StorageInterface
 
     private const ERROR_INVALID_KEY = 'Cache key must be a string, but %s passed';
 
-    private const ERROR_INVALID_KEYS = 'Cache keys must be an array<string>, but %s passed';
-
-    private const ERROR_INVALID_VALUES = 'Cache values must be an array<string, mixed>, but %s passed';
-
-    private const ERROR_INVALID_INTERVAL_ARGUMENT =
-        'Cache item ttl (expiration) must be of type int or \DateInterval, but %s passed';
-
     protected readonly RPCInterface $rpc;
     protected readonly \DateTimeZone $zone;
 
@@ -176,8 +169,6 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @return \DateTimeImmutable
-     *
      * @psalm-suppress InvalidFalsableReturnType
      * @psalm-suppress FalsableReturnStatement
      */
