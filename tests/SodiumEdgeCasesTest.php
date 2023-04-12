@@ -11,7 +11,7 @@ use Spiral\RoadRunner\KeyValue\Serializer\SodiumSerializer;
 /**
  * @requires extension sodium
  */
-class SodiumEdgeCasesTestCase extends TestCase
+class SodiumEdgeCasesTest extends TestCase
 {
     public function testSodiumSerializeInvalidKey(): void
     {

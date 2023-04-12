@@ -21,7 +21,7 @@ use Spiral\RoadRunner\KeyValue\Serializer\SodiumSerializer;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\FrozenDateCacheStub;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\RawSerializerStub;
 
-class CacheTestCase extends TestCase
+class CacheTest extends TestCase
 {
     /**
      * @psalm-suppress PropertyNotSetInConstructor
@@ -188,7 +188,7 @@ class CacheTestCase extends TestCase
     /**
      * @return array<string, array{0: callable(Cache)}>
      */
-    public function methodsDataProvider(): array
+    public static function methodsDataProvider(): array
     {
         return [
             'getTtl' => [fn (Cache $c) => $c->getTtl('key')],
@@ -401,12 +401,12 @@ class CacheTestCase extends TestCase
         $driver->clear();
     }
 
-    public function serializersWithValuesDataProvider(): array
+    public static function serializersWithValuesDataProvider(): array
     {
         $result = [];
 
-        foreach ($this->serializersDataProvider() as $name => [$serializer]) {
-            foreach ($this->valuesDataProvider() as $type => [$value]) {
+        foreach (self::serializersDataProvider() as $name => [$serializer]) {
+            foreach (self::valuesDataProvider() as $type => [$value]) {
                 $result['[' . $type . '] using [' . $name . ']'] = [$serializer, $value];
             }
         }
@@ -418,7 +418,7 @@ class CacheTestCase extends TestCase
      * @return array<string, array{0: SerializerInterface}>
      * @throws \SodiumException
      */
-    public function serializersDataProvider(): array
+    public static function serializersDataProvider(): array
     {
         $result = [];
         $result['PHP Serialize'] = [new DefaultSerializer()];

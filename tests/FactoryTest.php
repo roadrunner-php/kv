@@ -9,7 +9,7 @@ use Spiral\RoadRunner\KeyValue\FactoryInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 
-class FactoryTestCase extends TestCase
+class FactoryTest extends TestCase
 {
     /**
      * @param array<string, mixed> $mapping

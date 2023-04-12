@@ -18,7 +18,7 @@ abstract class TestCase extends BaseTestCase
         return new RPCConnectionStub($mapping);
     }
 
-    public function valuesDataProvider(): array
+    public static function valuesDataProvider(): array
     {
         return [
             'null' => [null],
