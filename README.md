@@ -33,8 +33,6 @@ First you need to add at least one kv plugin to your roadrunner configuration.
 For example, such a configuration would be quite feasible to run:
 
 ```yaml
-version: '3.0'
-
 rpc:
   listen: tcp://127.0.0.1:6001
 
@@ -45,6 +43,7 @@ kv:
         interval: 10
 ```
 
+> **Note**
 > Read more about all available drivers on the 
 > [documentation](https://roadrunner.dev/docs) page.
 
