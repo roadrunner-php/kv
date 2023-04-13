@@ -12,9 +12,6 @@ use Spiral\Goridge\RPC\RPCInterface;
 
 class RPCConnectionStub implements RPCInterface
 {
-    /**
-     * @var CodecInterface
-     */
     private CodecInterface $codec;
 
     /**
@@ -44,11 +41,11 @@ class RPCConnectionStub implements RPCInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @param non-empty-string $method
      */
-    public function call(string $method, $payload, $options = null)
+    public function call(string $method, mixed $payload, mixed $options = null): mixed
     {
-        $result = $this->mapping[$method] ?? function () use ($method) {
+        $result = $this->mapping[$method] ?? static function () use ($method) {
             throw new ServiceException('RPC: can\'t find method ' . $method);
         };
 

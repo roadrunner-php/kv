@@ -121,6 +121,7 @@ class Cache implements StorageInterface
     }
 
     /**
+     * @param non-empty-string $method
      * @psalm-suppress MixedReturnStatement
      * @psalm-suppress MixedInferredReturnType
      *
