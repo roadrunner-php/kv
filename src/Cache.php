@@ -7,6 +7,7 @@ namespace Spiral\RoadRunner\KeyValue;
 use RoadRunner\KV\DTO\V1\Item;
 use RoadRunner\KV\DTO\V1\Request;
 use RoadRunner\KV\DTO\V1\Response;
+use Spiral\Goridge\RPC\AsyncRPCInterface;
 use Spiral\Goridge\RPC\Codec\ProtobufCodec;
 use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\Goridge\RPC\RPCInterface;
@@ -22,7 +23,7 @@ use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 /**
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class Cache implements StorageInterface
+class Cache implements AsyncStorageInterface
 {
     use SerializerAwareTrait;
 
@@ -42,6 +43,8 @@ class Cache implements StorageInterface
 
     protected readonly RPCInterface $rpc;
     protected readonly \DateTimeZone $zone;
+
+    protected array $itemsInFlight = [];
 
     /**
      * @param non-empty-string $name
@@ -230,6 +233,11 @@ class Cache implements StorageInterface
         return $this->setMultiple([$key => $value], $ttl);
     }
 
+    public function setAsync(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
+    {
+        return $this->setMultipleAsync([$key => $value], $ttl);
+    }
+
     /**
      * @param mixed|string $key
      * @throws InvalidArgumentException
@@ -250,6 +258,20 @@ class Cache implements StorageInterface
     public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
         $this->call('kv.Set', $this->requestValues($values, $this->ttlToRfc3339String($ttl)));
+
+        return true;
+    }
+
+    public function setMultipleAsync(iterable $values, null|int|\DateInterval $ttl = null): bool
+    {
+        if ($this->rpc instanceof AsyncRPCInterface) {
+            $this->itemsInFlight[] = $this->rpc->callAsync(
+                'kv.Set',
+                $this->requestValues($values, $this->ttlToRfc3339String($ttl))
+            );
+        } else {
+            $this->setMultiple($values, $ttl);
+        }
 
         return true;
     }
@@ -375,5 +397,31 @@ class Cache implements StorageInterface
         }
 
         return false;
+    }
+
+    /**
+     * @throws KeyValueException
+     */
+    public function commitAsync(): bool
+    {
+        if ($this->rpc instanceof AsyncRPCInterface) {
+            try {
+                foreach ($this->itemsInFlight as $seq) {
+                    $this->rpc->getResponse($seq, Response::class);
+                }
+            } catch (ServiceException $e) {
+                $message = \str_replace(["\t", "\n"], ' ', $e->getMessage());
+
+                if (\str_contains($message, 'no such storage')) {
+                    throw new StorageException(\sprintf(self::ERROR_INVALID_STORAGE, $this->name));
+                }
+
+                throw new KeyValueException($message, $e->getCode(), $e);
+            } finally {
+                $this->itemsInFlight = [];
+            }
+        }
+
+        return true;
     }
 }
