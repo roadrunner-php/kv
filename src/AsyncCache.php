@@ -5,6 +5,7 @@ namespace Spiral\RoadRunner\KeyValue;
 use DateInterval;
 use RoadRunner\KV\DTO\V1\Response;
 use Spiral\Goridge\RPC\AsyncRPCInterface;
+use Spiral\Goridge\RPC\Exception\RPCException;
 use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\Goridge\RPC\RPCInterface;
 use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
@@ -47,6 +48,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * {@inheritDoc}
      *
      * @throws KeyValueException
+     * @throws RPCException
      */
     public function deleteAsync(string $key): bool
     {
@@ -62,6 +64,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @psalm-param iterable<string> $keys
      *
      * @throws KeyValueException
+     * @throws RPCException
      */
     public function deleteMultipleAsync(iterable $keys): bool
     {
@@ -69,7 +72,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
 
         // Handle someone never calling commitAsync()
         if (count($this->callsInFlight) > 1000) {
-            $this->callsInFlight = [];
+            $this->commitAsync();
         }
 
         $this->callsInFlight[] = $this->rpc->callAsync('kv.Delete', $this->requestKeys($keys));
@@ -83,6 +86,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
+     * @throws RPCException
      */
     public function setAsync(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
@@ -96,6 +100,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
+     * @throws RPCException
      */
     public function setMultipleAsync(iterable $values, null|int|DateInterval $ttl = null): bool
     {
@@ -103,7 +108,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
 
         // Handle someone never calling commitAsync()
         if (count($this->callsInFlight) > 1000) {
-            $this->callsInFlight = [];
+            $this->commitAsync();
         }
 
         $this->callsInFlight[] = $this->rpc->callAsync(
@@ -116,15 +121,14 @@ class AsyncCache extends Cache implements AsyncStorageInterface
 
     /**
      * @throws KeyValueException
+     * @throws RPCException
      */
     public function commitAsync(): bool
     {
         assert($this->rpc instanceof AsyncRPCInterface);
 
         try {
-            foreach ($this->callsInFlight as $seq) {
-                $this->rpc->getResponse($seq, Response::class);
-            }
+            $this->rpc->getResponses($this->callsInFlight, Response::class);
         } catch (ServiceException $e) {
             $message = str_replace(["\t", "\n"], ' ', $e->getMessage());
 
