@@ -7,7 +7,7 @@
 [![Codecov](https://codecov.io/gh/spiral/roadrunner-kv/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/roadrunner-kv/)
 [![Total Downloads](https://poser.pugx.org/spiral/roadrunner-kv/downloads)](https://packagist.org/packages/spiral/roadrunner-kv)
 
-<b>[Documentation](https://roadrunner.dev/docs/plugins-kv/2.x/en)</b> | [Framework Bundle](https://github.com/spiral/framework)
+<b>[Documentation](https://docs.roadrunner.dev/key-value/overview-kv)</b> | [Framework Bundle](https://github.com/spiral/framework)
 
 This repository contains the codebase PSR-16 PHP cache bridge using kv RoadRunner plugin.
 
@@ -45,7 +45,7 @@ kv:
 
 > **Note**
 > Read more about all available drivers on the 
-> [documentation](https://roadrunner.dev/docs) page.
+> [documentation](https://docs.roadrunner.dev) page.
 
 After starting the server with this configuration, one driver named "`test`" 
 will be available to you.
