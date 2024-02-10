@@ -1,10 +1,16 @@
+<a href="https://roadrunner.dev" target="_blank">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/roadrunner-server/.github/assets/8040338/e6bde856-4ec6-4a52-bd5b-bfe78736c1ff">
+    <img align="center" src="https://github.com/roadrunner-server/.github/assets/8040338/040fb694-1dd3-4865-9d29-8e0748c2c8b8">
+  </picture>
+</a>
+
 # RoadRunner KV Plugin Bridge
 
 [![PHP Version Require](https://poser.pugx.org/spiral/roadrunner-kv/require/php)](https://packagist.org/packages/spiral/roadrunner-kv)
 [![Latest Stable Version](https://poser.pugx.org/spiral/roadrunner-kv/v/stable)](https://packagist.org/packages/spiral/roadrunner-kv)
 [![phpunit](https://github.com/spiral/roadrunner-kv/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
 [![psalm](https://github.com/spiral/roadrunner-kv/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
-[![Codecov](https://codecov.io/gh/spiral/roadrunner-kv/branch/master/graph/badge.svg)](https://codecov.io/gh/spiral/roadrunner-kv/)
 [![Total Downloads](https://poser.pugx.org/spiral/roadrunner-kv/downloads)](https://packagist.org/packages/spiral/roadrunner-kv)
 
 <b>[Documentation](https://docs.roadrunner.dev/key-value/overview-kv)</b> | [Framework Bundle](https://github.com/spiral/framework)
