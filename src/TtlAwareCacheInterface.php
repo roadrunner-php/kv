@@ -11,7 +11,7 @@ interface TtlAwareCacheInterface extends CacheInterface
 {
     /**
      * @param non-empty-string $key
-
+     *
      * @throws InvalidArgumentException
      */
     public function getTtl(string $key): ?\DateTimeInterface;

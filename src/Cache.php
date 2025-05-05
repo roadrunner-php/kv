@@ -27,17 +27,14 @@ class Cache implements StorageInterface
     use SerializerAwareTrait;
 
     protected const ERROR_INVALID_STORAGE =
-        'Storage "%s" has not been defined. Please make sure your '.
+        'Storage "%s" has not been defined. Please make sure your ' .
         'RoadRunner "kv" configuration contains a storage key named "%1$s"';
-
     private const ERROR_TTL_NOT_AVAILABLE =
-        'Storage "%s" does not support kv.TTL RPC method execution. Please '.
+        'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
         'use another driver for the storage if you require this functionality';
-
     private const ERROR_CLEAR_NOT_AVAILABLE =
-        'RoadRunner does not support kv.Clear RPC method. Please '.
+        'RoadRunner does not support kv.Clear RPC method. Please ' .
         'make sure you are using RoadRunner v2.3.1 or higher.';
-
     private const ERROR_INVALID_KEY = 'Cache key must be a string, but %s passed';
 
     protected readonly RPCInterface $rpc;
@@ -49,7 +46,7 @@ class Cache implements StorageInterface
     public function __construct(
         RPCInterface $rpc,
         protected readonly string $name,
-        SerializerInterface $serializer = new DefaultSerializer()
+        SerializerInterface $serializer = new DefaultSerializer(),
     ) {
         $this->rpc = $rpc->withCodec(new ProtobufCodec());
         $this->zone = new \DateTimeZone('UTC');
@@ -68,7 +65,7 @@ class Cache implements StorageInterface
     public function getTtl(string $key): ?\DateTimeInterface
     {
         foreach ($this->getMultipleTtl([$key]) as $ttl) {
-            assert($ttl instanceof \DateTimeInterface || $ttl === null);
+            \assert($ttl instanceof \DateTimeInterface || $ttl === null);
 
             return $ttl;
         }
@@ -87,7 +84,7 @@ class Cache implements StorageInterface
     {
         try {
             $response = $this->createIndex(
-                $this->call('kv.TTL', $this->requestKeys($keys))
+                $this->call('kv.TTL', $this->requestKeys($keys)),
             );
         } catch (KeyValueException $e) {
             if (\str_contains($e->getMessage(), '_plugin_ttl')) {
@@ -103,79 +100,6 @@ class Cache implements StorageInterface
                 ? $this->dateFromRfc3339String($response[$key]->getTimeout())
                 : null;
         }
-    }
-
-    /**
-     * @return array<string, Item>
-     */
-    protected function createIndex(Response $response): array
-    {
-        $result = [];
-
-        /** @var Item $item */
-        foreach ($response->getItems() as $item) {
-            $result[$item->getKey()] = $item;
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param non-empty-string $method
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
-     *
-     * @throws KeyValueException
-     */
-    private function call(string $method, Request $request): Response
-    {
-        try {
-            return $this->rpc->call($method, $request, Response::class);
-        } catch (ServiceException $e) {
-            $message = \str_replace(["\t", "\n"], ' ', $e->getMessage());
-
-            if (\str_contains($message, 'no such storage')) {
-                throw new StorageException(\sprintf(self::ERROR_INVALID_STORAGE, $this->name));
-            }
-
-            throw new KeyValueException($message, $e->getCode(), $e);
-        }
-    }
-
-    /**
-     * @param iterable<string> $keys
-     * @throws InvalidArgumentException
-     */
-    protected function requestKeys(iterable $keys): Request
-    {
-        $items = [];
-
-        foreach ($keys as $key) {
-            $this->assertValidKey($key);
-            $items[] = new Item(['key' => $key]);
-        }
-
-        return $this->request($items);
-    }
-
-    /**
-     * @param array<Item> $items
-     */
-    private function request(array $items): Request
-    {
-        return new Request([
-            'storage' => $this->name,
-            'items' => $items,
-        ]);
-    }
-
-    /**
-     * @psalm-suppress InvalidFalsableReturnType
-     * @psalm-suppress FalsableReturnStatement
-     */
-    private function dateFromRfc3339String(string $time): \DateTimeImmutable
-    {
-        return \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339, $time, $this->zone);
     }
 
     /**
@@ -204,7 +128,7 @@ class Cache implements StorageInterface
     {
         /** @psalm-suppress MixedArgumentTypeCoercion */
         $items = $this->createIndex(
-            $this->call('kv.MGet', $this->requestKeys($keys))
+            $this->call('kv.MGet', $this->requestKeys($keys)),
         );
 
         $serializer = $this->getSerializer();
@@ -231,17 +155,6 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @param mixed|string $key
-     * @throws InvalidArgumentException
-     */
-    private function assertValidKey(mixed $key): void
-    {
-        if (! \is_string($key)) {
-            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
-        }
-    }
-
-    /**
      * @psalm-param iterable<string, mixed> $values
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
@@ -252,67 +165,6 @@ class Cache implements StorageInterface
         $this->call('kv.Set', $this->requestValues($values, $this->ttlToRfc3339String($ttl)));
 
         return true;
-    }
-
-    /**
-     * @param iterable<string, mixed> $values
-     * @throws SerializationException
-     * @throws InvalidArgumentException
-     */
-    protected function requestValues(iterable $values, string $ttl): Request
-    {
-        $items = [];
-        $serializer = $this->getSerializer();
-
-        /** @psalm-suppress MixedAssignment */
-        foreach ($values as $key => $value) {
-            $this->assertValidKey($key);
-
-            $items[] = new Item([
-                'key' => $key,
-                'value' => $serializer->serialize($value),
-                'timeout' => $ttl,
-            ]);
-        }
-
-        return $this->request($items);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     * @throws \Exception
-     */
-    protected function ttlToRfc3339String(null|int|\DateInterval $ttl): string
-    {
-        if ($ttl === null) {
-            return '';
-        }
-
-        if ($ttl instanceof \DateInterval) {
-            return $this->now()
-                ->add($ttl)
-                ->format(\DateTimeInterface::RFC3339);
-        }
-
-        $now = $this->now();
-
-        return $now->setTimestamp($ttl + $now->getTimestamp())->format(\DateTimeInterface::RFC3339);
-    }
-
-    /**
-     * Please note that this interface currently emulates the behavior of the
-     * PSR-20 implementation and may be replaced by the `psr/clock`
-     * implementation in future versions.
-     *
-     * Returns the current time as a DateTimeImmutable instance.
-     *
-     * @codeCoverageIgnore Ignore time-aware-mutable value.
-     *                     Must be covered with a stub.
-     * @throws \Exception
-     */
-    protected function now(): \DateTimeImmutable
-    {
-        return new \DateTimeImmutable('NOW', $this->zone);
     }
 
     /**
@@ -377,5 +229,150 @@ class Cache implements StorageInterface
         }
 
         return false;
+    }
+
+    /**
+     * @return array<string, Item>
+     */
+    protected function createIndex(Response $response): array
+    {
+        $result = [];
+
+        /** @var Item $item */
+        foreach ($response->getItems() as $item) {
+            $result[$item->getKey()] = $item;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param iterable<string> $keys
+     * @throws InvalidArgumentException
+     */
+    protected function requestKeys(iterable $keys): Request
+    {
+        $items = [];
+
+        foreach ($keys as $key) {
+            $this->assertValidKey($key);
+            $items[] = new Item(['key' => $key]);
+        }
+
+        return $this->request($items);
+    }
+
+    /**
+     * @param iterable<string, mixed> $values
+     * @throws SerializationException
+     * @throws InvalidArgumentException
+     */
+    protected function requestValues(iterable $values, string $ttl): Request
+    {
+        $items = [];
+        $serializer = $this->getSerializer();
+
+        /** @psalm-suppress MixedAssignment */
+        foreach ($values as $key => $value) {
+            $this->assertValidKey($key);
+
+            $items[] = new Item([
+                'key' => $key,
+                'value' => $serializer->serialize($value),
+                'timeout' => $ttl,
+            ]);
+        }
+
+        return $this->request($items);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws \Exception
+     */
+    protected function ttlToRfc3339String(null|int|\DateInterval $ttl): string
+    {
+        if ($ttl === null) {
+            return '';
+        }
+
+        if ($ttl instanceof \DateInterval) {
+            return $this->now()
+                ->add($ttl)
+                ->format(\DateTimeInterface::RFC3339);
+        }
+
+        $now = $this->now();
+
+        return $now->setTimestamp($ttl + $now->getTimestamp())->format(\DateTimeInterface::RFC3339);
+    }
+
+    /**
+     * Please note that this interface currently emulates the behavior of the
+     * PSR-20 implementation and may be replaced by the `psr/clock`
+     * implementation in future versions.
+     *
+     * Returns the current time as a DateTimeImmutable instance.
+     *
+     * @codeCoverageIgnore Ignore time-aware-mutable value.
+     *                     Must be covered with a stub.
+     * @throws \Exception
+     */
+    protected function now(): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable('NOW', $this->zone);
+    }
+
+    /**
+     * @param non-empty-string $method
+     * @psalm-suppress MixedReturnStatement
+     * @psalm-suppress MixedInferredReturnType
+     *
+     * @throws KeyValueException
+     */
+    private function call(string $method, Request $request): Response
+    {
+        try {
+            return $this->rpc->call($method, $request, Response::class);
+        } catch (ServiceException $e) {
+            $message = \str_replace(["\t", "\n"], ' ', $e->getMessage());
+
+            if (\str_contains($message, 'no such storage')) {
+                throw new StorageException(\sprintf(self::ERROR_INVALID_STORAGE, $this->name));
+            }
+
+            throw new KeyValueException($message, $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * @param array<Item> $items
+     */
+    private function request(array $items): Request
+    {
+        return new Request([
+            'storage' => $this->name,
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * @psalm-suppress InvalidFalsableReturnType
+     * @psalm-suppress FalsableReturnStatement
+     */
+    private function dateFromRfc3339String(string $time): \DateTimeImmutable
+    {
+        return \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339, $time, $this->zone);
+    }
+
+    /**
+     * @param mixed|string $key
+     * @throws InvalidArgumentException
+     */
+    private function assertValidKey(mixed $key): void
+    {
+        if (! \is_string($key)) {
+            throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
+        }
     }
 }

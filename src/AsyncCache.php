@@ -30,7 +30,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
     public function __construct(
         AsyncRPCInterface $rpc,
         string $name,
-        SerializerInterface $serializer = new DefaultSerializer()
+        SerializerInterface $serializer = new DefaultSerializer(),
     ) {
         parent::__construct($rpc, $name, $serializer);
     }
@@ -97,7 +97,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
 
         $this->callsInFlight[] = $this->rpc->callAsync(
             'kv.Set',
-            $this->requestValues($values, $this->ttlToRfc3339String($ttl))
+            $this->requestValues($values, $this->ttlToRfc3339String($ttl)),
         );
 
         return true;

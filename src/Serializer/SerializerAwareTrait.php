@@ -8,11 +8,6 @@ trait SerializerAwareTrait
 {
     protected SerializerInterface $serializer;
 
-    protected function setSerializer(SerializerInterface $serializer): void
-    {
-        $this->serializer = $serializer;
-    }
-
     /**
      * @return $this
      */
@@ -27,5 +22,10 @@ trait SerializerAwareTrait
     public function getSerializer(): SerializerInterface
     {
         return $this->serializer;
+    }
+
+    protected function setSerializer(SerializerInterface $serializer): void
+    {
+        $this->serializer = $serializer;
     }
 }
