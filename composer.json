@@ -33,9 +33,7 @@
     "support": {
         "docs": "https://docs.roadrunner.dev",
         "issues": "https://github.com/roadrunner-server/roadrunner/issues",
-        "forum": "https://forum.roadrunner.dev/",
         "chat": "https://discord.gg/V6EK4he"
-
     },
     "funding": [
         {
@@ -49,7 +47,7 @@
         "psr/simple-cache": "2 - 3",
         "roadrunner-php/roadrunner-api-dto": "^1.0",
         "spiral/goridge": "^4.2",
-        "spiral/roadrunner": "^2023.1 || ^2024.1"
+        "spiral/roadrunner": "^2023.1 || ^2024.1 || ^2025.1"
     },
     "autoload": {
         "psr-4": {
