@@ -24,12 +24,12 @@ final class IgbinarySerializer implements SerializerInterface
 
     public function serialize(mixed $value): string
     {
-        return igbinary_serialize($value);
+        return \igbinary_serialize($value);
     }
 
     public function unserialize(string $value): mixed
     {
-        return igbinary_unserialize($value);
+        return \igbinary_unserialize($value);
     }
 
     /**

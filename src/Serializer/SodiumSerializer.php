@@ -22,9 +22,9 @@ final class SodiumSerializer implements SerializerInterface
     public function serialize(mixed $value): string
     {
         try {
-            return sodium_crypto_box_seal(
+            return \sodium_crypto_box_seal(
                 $this->serializer->serialize($value),
-                sodium_crypto_box_publickey($this->key),
+                \sodium_crypto_box_publickey($this->key),
             );
         } catch (\SodiumException $e) {
             throw new SerializationException($e->getMessage(), (int) $e->getCode(), $e);
@@ -34,7 +34,7 @@ final class SodiumSerializer implements SerializerInterface
     public function unserialize(string $value): mixed
     {
         try {
-            $result = sodium_crypto_box_seal_open($value, $this->key);
+            $result = \sodium_crypto_box_seal_open($value, $this->key);
 
             if ($result === false) {
                 throw new SerializationException(
