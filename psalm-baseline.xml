@@ -11,23 +11,4 @@
       <code><![CDATA[\phpversion('igbinary')]]></code>
       <code><![CDATA[\phpversion('igbinary')]]></code>
     </PossiblyFalseArgument>
-  </file>
-  <file src="src/Serializer/SodiumSerializer.php">
-    <InvalidArgument>
-      <code><![CDATA[$e]]></code>
-      <code><![CDATA[$e]]></code>
-    </InvalidArgument>
-    <MixedArgument>
-      <code><![CDATA[$e->getMessage()]]></code>
-      <code><![CDATA[$e->getMessage()]]></code>
-    </MixedArgument>
-    <UndefinedClass>
-      <code><![CDATA[$e]]></code>
-      <code><![CDATA[$e]]></code>
-      <code><![CDATA[$e]]></code>
-      <code><![CDATA[$e]]></code>
-      <code><![CDATA[\SodiumException]]></code>
-      <code><![CDATA[\SodiumException]]></code>
-    </UndefinedClass>
-  </file>
 </files>
