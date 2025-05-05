@@ -14,19 +14,9 @@ final class SodiumSerializer implements SerializerInterface
      */
     public function __construct(
         private readonly SerializerInterface $serializer,
-        private readonly string $key
+        private readonly string $key,
     ) {
         $this->assertAvailable();
-    }
-
-    /**
-     * @codeCoverageIgnore Reason: Ignore environment-aware assertions
-     */
-    private function assertAvailable(): void
-    {
-        if (! \function_exists('\\sodium_crypto_box_seal')) {
-            throw new \LogicException('The "ext-sodium" PHP extension is not available');
-        }
     }
 
     public function serialize(mixed $value): string
@@ -34,7 +24,7 @@ final class SodiumSerializer implements SerializerInterface
         try {
             return \sodium_crypto_box_seal(
                 $this->serializer->serialize($value),
-                \sodium_crypto_box_publickey($this->key)
+                \sodium_crypto_box_publickey($this->key),
             );
         } catch (\SodiumException $e) {
             throw new SerializationException($e->getMessage(), $e->getCode(), $e);
@@ -48,14 +38,24 @@ final class SodiumSerializer implements SerializerInterface
 
             if ($result === false) {
                 throw new SerializationException(
-                    'Can not decode the received data. Please make sure '.
-                    'the encryption key matches the one used to encrypt this data'
+                    'Can not decode the received data. Please make sure ' .
+                    'the encryption key matches the one used to encrypt this data',
                 );
             }
 
             return $this->serializer->unserialize($result);
         } catch (\SodiumException $e) {
             throw new SerializationException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * @codeCoverageIgnore Reason: Ignore environment-aware assertions
+     */
+    private function assertAvailable(): void
+    {
+        if (! \function_exists('\\sodium_crypto_box_seal')) {
+            throw new \LogicException('The "ext-sodium" PHP extension is not available');
         }
     }
 }

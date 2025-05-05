@@ -4,7 +4,8 @@
 
 # Composer
 composer.phar
-vendor/
+/vendor/
+/runtime/
 composer.lock
 
 # OS

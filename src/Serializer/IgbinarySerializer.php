@@ -7,10 +7,8 @@ namespace Spiral\RoadRunner\KeyValue\Serializer;
 final class IgbinarySerializer implements SerializerInterface
 {
     private const SUPPORTED_VERSION_MIN = '3.1.6';
-
     private const ERROR_NOT_AVAILABLE =
         'The "ext-igbinary" PHP extension is not available';
-
     private const ERROR_NON_COMPATIBLE =
         'Current version of the "ext-igbinary" PHP extension (v%s) does not meet the requirements, ' .
         'version v' . self::SUPPORTED_VERSION_MIN . ' or higher required';
@@ -22,6 +20,16 @@ final class IgbinarySerializer implements SerializerInterface
     public function __construct()
     {
         $this->assertAvailable();
+    }
+
+    public function serialize(mixed $value): string
+    {
+        return \igbinary_serialize($value);
+    }
+
+    public function unserialize(string $value): mixed
+    {
+        return \igbinary_unserialize($value);
     }
 
     /**
@@ -36,15 +44,5 @@ final class IgbinarySerializer implements SerializerInterface
         if (\version_compare(self::SUPPORTED_VERSION_MIN, \phpversion('igbinary'), '>')) {
             throw new \LogicException(\sprintf(self::ERROR_NON_COMPATIBLE, \phpversion('igbinary')));
         }
-    }
-
-    public function serialize(mixed $value): string
-    {
-        return \igbinary_serialize($value);
-    }
-
-    public function unserialize(string $value): mixed
-    {
-        return \igbinary_unserialize($value);
     }
 }

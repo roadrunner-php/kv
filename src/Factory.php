@@ -19,7 +19,7 @@ final class Factory implements FactoryInterface
 
     public function __construct(
         private readonly RPCInterface $rpc,
-        SerializerInterface $serializer = new DefaultSerializer()
+        SerializerInterface $serializer = new DefaultSerializer(),
     ) {
         $this->setSerializer($serializer);
     }
