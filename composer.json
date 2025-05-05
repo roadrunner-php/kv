@@ -55,7 +55,7 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0",
+        "phpunit/phpunit": "^10.5.45",
         "roave/security-advisories": "dev-master",
         "spiral/code-style": "^2.2",
         "vimeo/psalm": ">=5.8"
