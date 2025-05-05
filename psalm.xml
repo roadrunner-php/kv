@@ -1,25 +1,33 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="1"
-    resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    errorLevel="1"
+    resolveFromConfigFile="true"
     findUnusedBaselineEntry="true"
     findUnusedCode="false"
+    errorBaseline="psalm-baseline.xml"
 >
-    <issueHandlers>
-        <RedundantConditionGivenDocblockType errorLevel="suppress" />
-        <RedundantCastGivenDocblockType errorLevel="suppress" />
-        <DocblockTypeContradiction errorLevel="suppress" />
-    </issueHandlers>
-    <stubs>
-        <file name="resources/stubs/igbinary.phpstub" />
-    </stubs>
     <projectFiles>
         <directory name="src" />
         <ignoreFiles>
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress" />
+        <ClassMustBeFinal errorLevel="suppress" />
+    </issueHandlers>
+    <forbiddenFunctions>
+        <function name="dd"/>
+        <function name="exit"/>
+        <function name="die"/>
+        <function name="var_dump"/>
+        <function name="echo"/>
+        <function name="print"/>
+        <function name="trap"/>
+        <function name="td"/>
+        <function name="tr"/>
+    </forbiddenFunctions>
 </psalm>

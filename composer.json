@@ -65,8 +65,11 @@
         }
     },
     "scripts": {
-        "tests": "phpunit",
-        "psalm": "psalm --no-cache"
+        "cs:diff": "php-cs-fixer fix --dry-run -v --diff --show-progress dots",
+        "cs:fix": "php-cs-fixer fix -v",
+        "test": "phpunit",
+        "psalm": "psalm",
+        "psalm:baseline": "psalm --set-baseline=psalm-baseline.xml"
     },
     "suggest": {
         "ext-igbinary": "(>3.1.6) Igbinary serailizer support",

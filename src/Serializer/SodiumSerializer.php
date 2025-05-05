@@ -37,7 +37,7 @@ final class SodiumSerializer implements SerializerInterface
                 \sodium_crypto_box_publickey($this->key)
             );
         } catch (\SodiumException $e) {
-            throw new SerializationException($e->getMessage(), $e->getCode(), $e);
+            throw new SerializationException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 
@@ -55,7 +55,7 @@ final class SodiumSerializer implements SerializerInterface
 
             return $this->serializer->unserialize($result);
         } catch (\SodiumException $e) {
-            throw new SerializationException($e->getMessage(), $e->getCode(), $e);
+            throw new SerializationException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 }
