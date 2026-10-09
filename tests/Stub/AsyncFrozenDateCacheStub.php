@@ -17,7 +17,7 @@ final class AsyncFrozenDateCacheStub extends AsyncCache
         \DateTimeImmutable $date,
         AsyncRPCInterface $rpc,
         string $name,
-        SerializerInterface $serializer = new DefaultSerializer()
+        SerializerInterface $serializer = new DefaultSerializer(),
     ) {
         $this->date = $date;
 

@@ -38,7 +38,7 @@ class SodiumEdgeCasesTest extends TestCase
         $this->expectException(SerializationException::class);
         $this->expectExceptionMessage(
             'Can not decode the received data. Please make sure the encryption ' .
-            'key matches the one used to encrypt this data'
+            'key matches the one used to encrypt this data',
         );
 
         $serializer = new SodiumSerializer(new DefaultSerializer(), \sodium_crypto_box_keypair());

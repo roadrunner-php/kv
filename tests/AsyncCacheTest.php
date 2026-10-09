@@ -18,24 +18,16 @@ use Spiral\RoadRunner\KeyValue\Tests\Stub\AsyncFrozenDateCacheStub;
 final class AsyncCacheTest extends CacheTestCase
 {
     /**
-     * @param array<string, mixed> $mapping
+     * @return \Traversable<string, array{0: callable(Cache)}>
      */
-    protected function cache(
-        array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer()
-    ): AsyncCache {
-        return new AsyncCache($this->asyncRPC($mapping), $this->name, $serializer);
-    }
+    public static function methodsDataProvider(): \Traversable
+    {
+        yield from parent::methodsDataProvider();
 
-    /**
-     * @param array<string, mixed> $mapping
-     */
-    protected function frozenDateCache(
-        \DateTimeImmutable $date,
-        array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer(),
-    ): AsyncCache {
-        return new AsyncFrozenDateCacheStub($date, $this->asyncRPC($mapping), $this->name, $serializer);
+        yield 'setAsync' => [fn(AsyncCache $c) => $c->setAsync('key', 'value') && $c->commitAsync()];
+        yield 'setMultipleAsync' => [fn(AsyncCache $c) => $c->setMultiple(['key' => 'value']) && $c->commitAsync()];
+        yield 'deleteMultipleAsync' => [fn(AsyncCache $c) => $c->deleteMultipleAsync(['key']) && $c->commitAsync()];
+        yield 'deleteAsync' => [fn(AsyncCache $c) => $c->delete('key') && $c->commitAsync()];
     }
 
     #[DataProvider('serializersWithValuesDataProvider')]
@@ -212,15 +204,23 @@ final class AsyncCacheTest extends CacheTestCase
     }
 
     /**
-     * @return \Traversable<string, array{0: callable(Cache)}>
+     * @param array<string, mixed> $mapping
      */
-    public static function methodsDataProvider(): \Traversable
-    {
-        yield from parent::methodsDataProvider();
+    protected function cache(
+        array $mapping = [],
+        SerializerInterface $serializer = new DefaultSerializer(),
+    ): AsyncCache {
+        return new AsyncCache($this->asyncRPC($mapping), $this->name, $serializer);
+    }
 
-        yield 'setAsync' => [fn (AsyncCache $c) => $c->setAsync('key', 'value') && $c->commitAsync()];
-        yield 'setMultipleAsync' => [fn (AsyncCache $c) => $c->setMultiple(['key' => 'value']) && $c->commitAsync()];
-        yield 'deleteMultipleAsync' => [fn (AsyncCache $c) => $c->deleteMultipleAsync(['key']) && $c->commitAsync()];
-        yield 'deleteAsync' => [fn (AsyncCache $c) => $c->delete('key') && $c->commitAsync()];
+    /**
+     * @param array<string, mixed> $mapping
+     */
+    protected function frozenDateCache(
+        \DateTimeImmutable $date,
+        array $mapping = [],
+        SerializerInterface $serializer = new DefaultSerializer(),
+    ): AsyncCache {
+        return new AsyncFrozenDateCacheStub($date, $this->asyncRPC($mapping), $this->name, $serializer);
     }
 }

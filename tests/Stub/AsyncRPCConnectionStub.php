@@ -12,6 +12,7 @@ class AsyncRPCConnectionStub extends RPCConnectionStub implements AsyncRPCInterf
      * @var array<int, mixed>
      */
     private array $responses = [];
+
     private int $seq = 0;
 
     public function callIgnoreResponse(string $method, mixed $payload): void

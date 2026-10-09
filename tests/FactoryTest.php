@@ -11,26 +11,6 @@ use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 
 final class FactoryTest extends TestCase
 {
-    /**
-     * @param array<string, mixed> $mapping
-     */
-    private function factory(
-        array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer(),
-    ): FactoryInterface {
-        return new Factory($this->rpc($mapping), $serializer);
-    }
-
-    /**
-     * @param array<string, mixed> $mapping
-     */
-    private function asyncFactory(
-        array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer()
-    ): FactoryInterface {
-        return new Factory($this->asyncRPC($mapping), $serializer);
-    }
-
     public function testFactoryCreation(): void
     {
         $this->expectNotToPerformAssertions();
@@ -59,5 +39,25 @@ final class FactoryTest extends TestCase
         $driver = $this->asyncFactory()->select($name);
 
         $this->assertSame($name, $driver->getName());
+    }
+
+    /**
+     * @param array<string, mixed> $mapping
+     */
+    private function factory(
+        array $mapping = [],
+        SerializerInterface $serializer = new DefaultSerializer(),
+    ): FactoryInterface {
+        return new Factory($this->rpc($mapping), $serializer);
+    }
+
+    /**
+     * @param array<string, mixed> $mapping
+     */
+    private function asyncFactory(
+        array $mapping = [],
+        SerializerInterface $serializer = new DefaultSerializer(),
+    ): FactoryInterface {
+        return new Factory($this->asyncRPC($mapping), $serializer);
     }
 }

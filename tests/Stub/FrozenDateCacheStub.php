@@ -17,7 +17,7 @@ final class FrozenDateCacheStub extends Cache
         \DateTimeImmutable $date,
         RPCInterface $rpc,
         string $name,
-        SerializerInterface $serializer = new DefaultSerializer()
+        SerializerInterface $serializer = new DefaultSerializer(),
     ) {
         $this->date = $date;
 
