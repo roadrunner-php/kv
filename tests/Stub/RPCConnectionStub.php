@@ -6,7 +6,6 @@ namespace Spiral\RoadRunner\KeyValue\Tests\Stub;
 
 use Spiral\Goridge\RPC\Codec\JsonCodec;
 use Spiral\Goridge\RPC\CodecInterface;
-use Spiral\Goridge\RPC\Exception\RPCException;
 use Spiral\Goridge\RPC\Exception\ServiceException;
 use Spiral\Goridge\RPC\RPCInterface;
 

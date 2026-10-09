@@ -29,28 +29,60 @@ abstract class CacheTestCase extends TestCase
      */
     protected string $name;
 
-    public function setUp(): void
+    /**
+     * @return \Traversable<string, array{0: callable(Cache)}>
+     */
+    public static function methodsDataProvider(): \Traversable
     {
-        $this->name = \bin2hex(\random_bytes(32));
-        parent::setUp();
+        yield 'getTtl' => [fn(Cache $c) => $c->getTtl('key')];
+        yield 'getMultipleTtl' => [fn(Cache $c) => $c->getMultipleTtl(['key'])];
+        yield 'get' => [fn(Cache $c) => $c->get('key')];
+        yield 'set' => [fn(Cache $c) => $c->set('key', 'value')];
+        yield 'getMultiple' => [fn(Cache $c) => $c->getMultiple(['key'])];
+        yield 'setMultiple' => [fn(Cache $c) => $c->setMultiple(['key' => 'value'])];
+        yield 'deleteMultiple' => [fn(Cache $c) => $c->deleteMultiple(['key'])];
+        yield 'delete' => [fn(Cache $c) => $c->delete('key')];
+        yield 'has' => [fn(Cache $c) => $c->has('key')];
+    }
+
+    public static function serializersWithValuesDataProvider(): array
+    {
+        $result = [];
+
+        foreach (self::serializersDataProvider() as $name => [$serializer]) {
+            foreach (self::valuesDataProvider() as $type => [$value]) {
+                $result['[' . $type . '] using [' . $name . ']'] = [$serializer, $value];
+            }
+        }
+
+        return $result;
     }
 
     /**
-     * @param array<string, mixed> $mapping
+     * @return array<string, array{0: SerializerInterface}>
+     * @throws \SodiumException
      */
-    abstract protected function cache(
-        array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer()
-    ): StorageInterface;
+    public static function serializersDataProvider(): array
+    {
+        $result = [];
+        $result['PHP Serialize'] = [new DefaultSerializer()];
 
-    /**
-     * @param array<string, mixed> $mapping
-     */
-    abstract protected function frozenDateCache(
-        \DateTimeImmutable $date,
-        array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer(),
-    ): StorageInterface;
+        // ext-igbinary required for this serializer
+        if (\extension_loaded('igbinary')) {
+            $result['Igbinary'] = [new IgbinarySerializer()];
+        }
+
+        // ext-sodium required for this serialize
+        if (\extension_loaded('sodium')) {
+            foreach ($result as $name => [$serializer]) {
+                $result['Sodium through ' . $name] = [
+                    new SodiumSerializer($serializer, \sodium_crypto_box_keypair()),
+                ];
+            }
+        }
+
+        return $result;
+    }
 
     public function testName(): void
     {
@@ -65,7 +97,7 @@ abstract class CacheTestCase extends TestCase
         [$key, $expected] = [$this->randomString(), $this->now()];
 
         $driver = $this->cache([
-            'kv.TTL' => fn () => $this->response([
+            'kv.TTL' => fn() => $this->response([
                 new Item([
                     'key' => $key,
                     'value' => $serializer->serialize(null),
@@ -95,7 +127,7 @@ abstract class CacheTestCase extends TestCase
         $expected = $this->now();
 
         $driver = $this->cache([
-            'kv.TTL' => fn () => $this->response([
+            'kv.TTL' => fn() => $this->response([
                 new Item([
                     'key' => $keys[0],
                     'value' => $serializer->serialize(null),
@@ -124,7 +156,7 @@ abstract class CacheTestCase extends TestCase
         $expected = $this->now();
 
         $driver = $this->cache([
-            'kv.TTL' => fn () => $this->response([
+            'kv.TTL' => fn() => $this->response([
                 new Item([
                     'key' => $keys[0],
                     'value' => $serializer->serialize(null),
@@ -147,7 +179,7 @@ abstract class CacheTestCase extends TestCase
     public function testTtlWithInvalidResponseKey(SerializerInterface $serializer): void
     {
         $driver = $this->cache([
-            'kv.TTL' => fn () => $this->response([
+            'kv.TTL' => fn() => $this->response([
                 new Item([
                     'key' => $this->randomString(),
                     'value' => $serializer->serialize(null),
@@ -541,60 +573,28 @@ abstract class CacheTestCase extends TestCase
             ->get('key');
     }
 
-    /**
-     * @return \Traversable<string, array{0: callable(Cache)}>
-     */
-    public static function methodsDataProvider(): \Traversable
+    public function setUp(): void
     {
-        yield 'getTtl' => [fn (Cache $c) => $c->getTtl('key')];
-        yield 'getMultipleTtl' => [fn (Cache $c) => $c->getMultipleTtl(['key'])];
-        yield 'get' => [fn (Cache $c) => $c->get('key')];
-        yield 'set' => [fn (Cache $c) => $c->set('key', 'value')];
-        yield 'getMultiple' => [fn (Cache $c) => $c->getMultiple(['key'])];
-        yield 'setMultiple' => [fn (Cache $c) => $c->setMultiple(['key' => 'value'])];
-        yield 'deleteMultiple' => [fn (Cache $c) => $c->deleteMultiple(['key'])];
-        yield 'delete' => [fn (Cache $c) => $c->delete('key')];
-        yield 'has' => [fn (Cache $c) => $c->has('key')];
-    }
-
-    public static function serializersWithValuesDataProvider(): array
-    {
-        $result = [];
-
-        foreach (self::serializersDataProvider() as $name => [$serializer]) {
-            foreach (self::valuesDataProvider() as $type => [$value]) {
-                $result['[' . $type . '] using [' . $name . ']'] = [$serializer, $value];
-            }
-        }
-
-        return $result;
+        $this->name = \bin2hex(\random_bytes(32));
+        parent::setUp();
     }
 
     /**
-     * @return array<string, array{0: SerializerInterface}>
-     * @throws \SodiumException
+     * @param array<string, mixed> $mapping
      */
-    public static function serializersDataProvider(): array
-    {
-        $result = [];
-        $result['PHP Serialize'] = [new DefaultSerializer()];
+    abstract protected function cache(
+        array $mapping = [],
+        SerializerInterface $serializer = new DefaultSerializer(),
+    ): StorageInterface;
 
-        // ext-igbinary required for this serializer
-        if (\extension_loaded('igbinary')) {
-            $result['Igbinary'] = [new IgbinarySerializer()];
-        }
-
-        // ext-sodium required for this serialize
-        if (\extension_loaded('sodium')) {
-            foreach ($result as $name => [$serializer]) {
-                $result['Sodium through ' . $name] = [
-                    new SodiumSerializer($serializer, \sodium_crypto_box_keypair()),
-                ];
-            }
-        }
-
-        return $result;
-    }
+    /**
+     * @param array<string, mixed> $mapping
+     */
+    abstract protected function frozenDateCache(
+        \DateTimeImmutable $date,
+        array $mapping = [],
+        SerializerInterface $serializer = new DefaultSerializer(),
+    ): StorageInterface;
 
     protected function randomString(int $len = 32): string
     {
