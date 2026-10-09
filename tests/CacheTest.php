@@ -16,7 +16,7 @@ final class CacheTest extends CacheTestCase
      */
     protected function cache(
         array $mapping = [],
-        SerializerInterface $serializer = new DefaultSerializer()
+        SerializerInterface $serializer = new DefaultSerializer(),
     ): Cache {
         return new Cache($this->rpc($mapping), $this->name, $serializer);
     }
