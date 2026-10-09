@@ -203,6 +203,73 @@ final class AsyncCacheTest extends CacheTestCase
         $driver->commitAsync();
     }
 
+    public function testDeleteAsyncCommitsWhenTooManyCallsInFlight(): void
+    {
+        $calls = 0;
+        $driver = $this->cache([
+            'kv.Delete' => function () use (&$calls): string {
+                ++$calls;
+
+                return $this->response();
+            },
+        ]);
+
+        for ($i = 0; $i < 1002; ++$i) {
+            $driver->deleteAsync('key');
+        }
+
+        Assert::same($calls, 1001);
+
+        $driver->commitAsync();
+
+        Assert::same($calls, 1002);
+    }
+
+    public function testSetAsyncCommitsWhenTooManyCallsInFlight(): void
+    {
+        $calls = 0;
+        $driver = $this->cache([
+            'kv.Set' => function () use (&$calls): string {
+                ++$calls;
+
+                return $this->response();
+            },
+        ]);
+
+        for ($i = 0; $i < 1002; ++$i) {
+            $driver->setAsync('key', 'value');
+        }
+
+        Assert::same($calls, 1001);
+
+        $driver->commitAsync();
+
+        Assert::same($calls, 1002);
+    }
+
+    public function testCommitAsyncForgetsCallsAfterFailure(): void
+    {
+        $calls = 0;
+        $driver = $this->cache([
+            'kv.Delete' => function () use (&$calls): never {
+                ++$calls;
+
+                throw new ServiceException('Error: Can not delete something');
+            },
+        ]);
+
+        $driver->deleteAsync('key');
+
+        try {
+            $driver->commitAsync();
+            Assert::fail('commitAsync() must rethrow the RPC error');
+        } catch (KeyValueException) {
+        }
+
+        Assert::true($driver->commitAsync());
+        Assert::same($calls, 1);
+    }
+
     /**
      * @param array<string, mixed> $mapping
      */
