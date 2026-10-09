@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
+use Testo\Test;
+use Testo\Assert\ExpectNoAssertions;
+use Testo\Assert;
 use Spiral\RoadRunner\KeyValue\Factory;
 use Spiral\RoadRunner\KeyValue\FactoryInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 
+#[Test]
 final class FactoryTest extends TestCase
 {
+    #[ExpectNoAssertions]
     public function testFactoryCreation(): void
     {
-        $this->expectNotToPerformAssertions();
         $this->factory();
     }
 
+    #[ExpectNoAssertions]
     public function testAsyncFactoryCreation(): void
     {
-        $this->expectNotToPerformAssertions();
         $this->asyncFactory();
     }
 
@@ -29,7 +33,7 @@ final class FactoryTest extends TestCase
 
         $driver = $this->factory()->select($name);
 
-        $this->assertSame($name, $driver->getName());
+        Assert::same($driver->getName(), $name);
     }
 
     public function testSuccessSelectOfUnknownStorageWithAsync(): void
@@ -38,7 +42,7 @@ final class FactoryTest extends TestCase
 
         $driver = $this->asyncFactory()->select($name);
 
-        $this->assertSame($name, $driver->getName());
+        Assert::same($driver->getName(), $name);
     }
 
     /**

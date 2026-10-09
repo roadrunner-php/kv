@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
+use Testo\Test;
+use Testo\Data\DataProvider;
+use Testo\Core\Exception\SkipTest;
+use Testo\Assert;
+use Testo\Expect;
 use RoadRunner\KV\DTO\V1\Item;
 use RoadRunner\KV\DTO\V1\Request;
 use Spiral\Goridge\RPC\Exception\ServiceException;
@@ -15,6 +19,7 @@ use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\AsyncFrozenDateCacheStub;
 
+#[Test]
 final class AsyncCacheTest extends CacheTestCase
 {
     /**
@@ -34,11 +39,11 @@ final class AsyncCacheTest extends CacheTestCase
     public function testSetAsync(SerializerInterface $serializer, mixed $expected): void
     {
         if (\is_float($expected) && \is_nan($expected)) {
-            $this->markTestSkipped('Unable to execute test for NAN float value');
+            throw new SkipTest('Unable to execute test for NAN float value');
         }
 
         if (\is_resource($expected)) {
-            $this->markTestSkipped('Unable to execute test for resource value');
+            throw new SkipTest('Unable to execute test for resource value');
         }
 
         $driver = $this->getAssertableCacheOnSet($serializer, ['key' => $expected]);
@@ -51,11 +56,11 @@ final class AsyncCacheTest extends CacheTestCase
     public function testMultipleSetAsync(SerializerInterface $serializer, mixed $value): void
     {
         if (\is_float($value) && \is_nan($value)) {
-            $this->markTestSkipped('Unable to execute test for NAN float value');
+            throw new SkipTest('Unable to execute test for NAN float value');
         }
 
         if (\is_resource($value)) {
-            $this->markTestSkipped('Unable to execute test for resource value');
+            throw new SkipTest('Unable to execute test for resource value');
         }
 
         $expected = ['key' => $value, 'key2' => $value];
@@ -79,7 +84,7 @@ final class AsyncCacheTest extends CacheTestCase
             'kv.Set' => function (Request $request) use ($expected) {
                 /** @var Item $item */
                 $item = $request->getItems()[0];
-                $this->assertSame($expected, $item->getTimeout());
+                Assert::same($item->getTimeout(), $expected);
 
                 return $this->response();
             },
@@ -106,7 +111,7 @@ final class AsyncCacheTest extends CacheTestCase
             'kv.Set' => function (Request $request) use ($expected) {
                 /** @var Item $item */
                 $item = $request->getItems()[0];
-                $this->assertSame($expected, $item->getTimeout());
+                Assert::same($item->getTimeout(), $expected);
 
                 return $this->response();
             },
@@ -122,28 +127,25 @@ final class AsyncCacheTest extends CacheTestCase
         $type = \get_debug_type($invalidTTL);
 
         if ($invalidTTL === null || \is_int($invalidTTL) || $invalidTTL instanceof \DateTimeInterface) {
-            $this->markTestSkipped('Can not complete negative test for valid TTL of type ' . $type);
+            throw new SkipTest('Can not complete negative test for valid TTL of type ' . $type);
         }
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Cache item ttl (expiration) must be of type int or \DateInterval, but ' . $type . ' passed',
-        );
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache item ttl (expiration) must be of type int or \DateInterval, but ' . $type . ' passed');
 
         $driver = $this->cache();
 
         // Send relative date in $now + $seconds
         $driver->setAsync('key', 'value', $invalidTTL);
         // Make sure not reachable
-        $this->assertSame(true, false);
+        Assert::same(false, true);
         $driver->commitAsync();
     }
 
     public function testDeleteAsync(): void
     {
         $driver = $this->cache(['kv.Delete' => $this->response([])]);
-        $this->assertTrue($driver->deleteAsync('key'));
-        $this->assertTrue($driver->commitAsync());
+        Assert::true($driver->deleteAsync('key'));
+        Assert::true($driver->commitAsync());
     }
 
     public function testDeleteAsyncWithError(): void
@@ -155,15 +157,15 @@ final class AsyncCacheTest extends CacheTestCase
         ]);
 
         $driver->deleteAsync('key');
-        $this->expectException(KeyValueException::class);
+        Expect::exception(KeyValueException::class);
         $driver->commitAsync();
     }
 
     public function testDeleteMultipleAsync(): void
     {
         $driver = $this->cache(['kv.Delete' => $this->response([])]);
-        $this->assertTrue($driver->deleteMultipleAsync(['key', 'key2']));
-        $this->assertTrue($driver->commitAsync());
+        Assert::true($driver->deleteMultipleAsync(['key', 'key2']));
+        Assert::true($driver->commitAsync());
     }
 
     public function testDeleteMultipleAsyncWithError(): void
@@ -175,31 +177,29 @@ final class AsyncCacheTest extends CacheTestCase
         ]);
 
         $driver->deleteMultipleAsync(['key', 'key2']);
-        $this->expectException(KeyValueException::class);
+        Expect::exception(KeyValueException::class);
         $driver->commitAsync();
     }
 
     public function testSetAsyncMultipleWithInvalidKey(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
 
         $driver = $this->cache();
         $driver->setMultipleAsync([0 => 0xDEAD_BEEF]);
         // Make sure not reachable
-        $this->assertSame(true, false);
+        Assert::same(false, true);
         $driver->commitAsync();
     }
 
     public function testDeleteMultipleAsyncWithInvalidKey(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
 
         $driver = $this->cache();
         $driver->deleteMultipleAsync([0 => 0xDEAD_BEEF]);
         // Make sure not reachable
-        $this->assertSame(true, false);
+        Assert::same(false, true);
         $driver->commitAsync();
     }
 

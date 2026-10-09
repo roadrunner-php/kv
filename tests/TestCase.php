@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
-use PHPUnit\Framework\TestCase as BaseTestCase;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\AsyncRPCConnectionStub;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\RPCConnectionStub;
 
-abstract class TestCase extends BaseTestCase
+abstract class TestCase
 {
     public static function valuesDataProvider(): array
     {
