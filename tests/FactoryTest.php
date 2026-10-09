@@ -7,10 +7,13 @@ namespace Spiral\RoadRunner\KeyValue\Tests;
 use Testo\Test;
 use Testo\Assert\ExpectNoAssertions;
 use Testo\Assert;
+use Spiral\RoadRunner\KeyValue\AsyncCache;
+use Spiral\RoadRunner\KeyValue\Cache;
 use Spiral\RoadRunner\KeyValue\Factory;
 use Spiral\RoadRunner\KeyValue\FactoryInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
+use Spiral\RoadRunner\KeyValue\Tests\Stub\RawSerializerStub;
 
 #[Test]
 final class FactoryTest extends TestCase
@@ -43,6 +46,39 @@ final class FactoryTest extends TestCase
         $driver = $this->asyncFactory()->select($name);
 
         Assert::same($driver->getName(), $name);
+    }
+
+    public function testSelectReturnsCacheForSyncRpc(): void
+    {
+        $driver = $this->factory()->select('name');
+
+        Assert::same($driver::class, Cache::class);
+    }
+
+    public function testSelectReturnsAsyncCacheForAsyncRpc(): void
+    {
+        $driver = $this->asyncFactory()->select('name');
+
+        Assert::instanceOf($driver, AsyncCache::class);
+    }
+
+    public function testSelectedStorageUsesFactorySerializer(): void
+    {
+        $serializer = new RawSerializerStub();
+
+        Assert::same($this->factory(serializer: $serializer)->select('name')->getSerializer(), $serializer);
+        Assert::same($this->asyncFactory(serializer: $serializer)->select('name')->getSerializer(), $serializer);
+    }
+
+    public function testWithSerializerDoesNotChangeTheOriginal(): void
+    {
+        $serializer = new RawSerializerStub();
+        $factory = $this->factory();
+
+        $decorated = $factory->withSerializer($serializer);
+
+        Assert::same($decorated->select('name')->getSerializer(), $serializer);
+        Assert::instanceOf($factory->select('name')->getSerializer(), DefaultSerializer::class);
     }
 
     /**

@@ -594,6 +594,91 @@ abstract class CacheTestCase extends TestCase
             ->get('key');
     }
 
+    #[Test]
+    public function testGetMultipleReturnsDefaultForMissingKeys(): void
+    {
+        $driver = $this->cache([
+            'kv.MGet' => $this->response([
+                new Item(['key' => 'key0', 'value' => \serialize('value')]),
+            ]),
+        ]);
+
+        $actual = $driver->getMultiple(['key0', 'key1'], 'default');
+
+        Assert::same(\iterator_to_array($actual), ['key0' => 'value', 'key1' => 'default']);
+    }
+
+    #[Test]
+    public function testTtlIsNullForItemWithoutTimeout(): void
+    {
+        $driver = $this->cache([
+            'kv.TTL' => $this->response([
+                new Item(['key' => 'key', 'value' => \serialize(null)]),
+            ]),
+        ]);
+
+        Assert::null($driver->getTtl('key'));
+    }
+
+    #[Test]
+    public function testRequestTargetsTheStorage(): void
+    {
+        $storages = [];
+
+        $driver = $this->cache([
+            'kv.Has' => function (Request $request) use (&$storages): string {
+                $storages[] = $request->getStorage();
+
+                return $this->response();
+            },
+        ]);
+
+        $driver->has('key');
+
+        Assert::same($storages, [$this->name]);
+    }
+
+    #[Test]
+    public function testSetWithIntTtlIsRelativeToCurrentTime(): void
+    {
+        $timeouts = [];
+
+        $driver = $this->cache([
+            'kv.Set' => function (Request $request) use (&$timeouts): string {
+                /** @var Item $item */
+                foreach ($request->getItems() as $item) {
+                    $timeouts[] = $item->getTimeout();
+                }
+
+                return $this->response();
+            },
+        ]);
+
+        $before = \time();
+        $driver->set('key', 'value', 60);
+        $after = \time();
+
+        Assert::count($timeouts, 1);
+        $timeout = \DateTimeImmutable::createFromFormat(\DateTimeInterface::RFC3339, $timeouts[0]);
+        Assert::instanceOf($timeout, \DateTimeImmutable::class);
+        Assert::numeric($timeout->getTimestamp())
+            ->greaterThanOrEqual($before + 60)
+            ->lessThanOrEqual($after + 60);
+    }
+
+    #[Test]
+    public function testWithSerializerDoesNotChangeTheOriginal(): void
+    {
+        $serializer = new RawSerializerStub();
+        $driver = $this->cache();
+
+        $decorated = $driver->withSerializer($serializer);
+
+        Assert::notSame($decorated, $driver);
+        Assert::same($decorated->getSerializer(), $serializer);
+        Assert::instanceOf($driver->getSerializer(), DefaultSerializer::class);
+    }
+
     #[BeforeTest]
     public function setUp(): void
     {
