@@ -24,6 +24,7 @@ final class Factory implements FactoryInterface
         $this->setSerializer($serializer);
     }
 
+    #[\Override]
     public function select(string $name): StorageInterface
     {
         if ($this->rpc instanceof AsyncRPCInterface) {

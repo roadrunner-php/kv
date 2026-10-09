@@ -54,6 +54,7 @@ class Cache implements StorageInterface
         $this->setSerializer($serializer);
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
@@ -62,6 +63,7 @@ class Cache implements StorageInterface
     /**
      * @throws KeyValueException
      */
+    #[\Override]
     public function getTtl(string $key): ?\DateTimeInterface
     {
         foreach ($this->getMultipleTtl([$key]) as $ttl) {
@@ -80,6 +82,7 @@ class Cache implements StorageInterface
     /**
      * @throws KeyValueException
      */
+    #[\Override]
     public function getMultipleTtl(iterable $keys = []): iterable
     {
         try {
@@ -105,6 +108,7 @@ class Cache implements StorageInterface
     /**
      * @throws KeyValueException
      */
+    #[\Override]
     public function get(string $key, mixed $default = null): mixed
     {
         /** @psalm-suppress MixedAssignment */
@@ -124,6 +128,7 @@ class Cache implements StorageInterface
      * @return iterable<string, mixed>
      * @throws KeyValueException
      */
+    #[\Override]
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         /** @psalm-suppress MixedArgumentTypeCoercion */
@@ -149,6 +154,7 @@ class Cache implements StorageInterface
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
+    #[\Override]
     public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
         return $this->setMultiple([$key => $value], $ttl);
@@ -160,6 +166,7 @@ class Cache implements StorageInterface
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
+    #[\Override]
     public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
         $this->call('kv.Set', $this->requestValues($values, $this->ttlToRfc3339String($ttl)));
@@ -173,6 +180,7 @@ class Cache implements StorageInterface
      *
      * @throws KeyValueException
      */
+    #[\Override]
     public function delete(string $key): bool
     {
         return $this->deleteMultiple([$key]);
@@ -188,6 +196,7 @@ class Cache implements StorageInterface
      *
      * @throws KeyValueException
      */
+    #[\Override]
     public function deleteMultiple(iterable $keys): bool
     {
         $this->call('kv.Delete', $this->requestKeys($keys));
@@ -198,6 +207,7 @@ class Cache implements StorageInterface
     /**
      * @throws KeyValueException
      */
+    #[\Override]
     public function clear(): bool
     {
         try {
@@ -216,6 +226,7 @@ class Cache implements StorageInterface
     /**
      * @throws KeyValueException
      */
+    #[\Override]
     public function has(string $key): bool
     {
         /** @var array<Item> $items */

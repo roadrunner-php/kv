@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Serializer;
 
+use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
+
 final class IgbinarySerializer implements SerializerInterface
 {
     private const SUPPORTED_VERSION_MIN = '3.1.6';
@@ -22,11 +24,19 @@ final class IgbinarySerializer implements SerializerInterface
         $this->assertAvailable();
     }
 
+    #[\Override]
     public function serialize(mixed $value): string
     {
-        return \igbinary_serialize($value);
+        $result = \igbinary_serialize($value);
+
+        if ($result === false) {
+            throw new SerializationException('Can not serialize the value using ext-igbinary');
+        }
+
+        return $result;
     }
 
+    #[\Override]
     public function unserialize(string $value): mixed
     {
         return \igbinary_unserialize($value);
@@ -41,8 +51,10 @@ final class IgbinarySerializer implements SerializerInterface
             throw new \LogicException(self::ERROR_NOT_AVAILABLE);
         }
 
-        if (\version_compare(self::SUPPORTED_VERSION_MIN, \phpversion('igbinary'), '>')) {
-            throw new \LogicException(\sprintf(self::ERROR_NON_COMPATIBLE, \phpversion('igbinary')));
+        $version = (string) \phpversion('igbinary');
+
+        if (\version_compare(self::SUPPORTED_VERSION_MIN, $version, '>')) {
+            throw new \LogicException(\sprintf(self::ERROR_NON_COMPATIBLE, $version));
         }
     }
 }
