@@ -19,6 +19,7 @@ final class SodiumSerializer implements SerializerInterface
         $this->assertAvailable();
     }
 
+    #[\Override]
     public function serialize(mixed $value): string
     {
         try {
@@ -31,6 +32,7 @@ final class SodiumSerializer implements SerializerInterface
         }
     }
 
+    #[\Override]
     public function unserialize(string $value): mixed
     {
         try {

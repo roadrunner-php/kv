@@ -8,11 +8,13 @@ use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 
 final class DefaultSerializer implements SerializerInterface
 {
+    #[\Override]
     public function serialize(mixed $value): string
     {
         return \serialize($value);
     }
 
+    #[\Override]
     public function unserialize(string $value): mixed
     {
         // Deserialization optimizations

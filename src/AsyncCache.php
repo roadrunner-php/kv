@@ -42,6 +42,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @throws KeyValueException
      * @throws RPCException
      */
+    #[\Override]
     public function deleteAsync(string $key): bool
     {
         return $this->deleteMultipleAsync([$key]);
@@ -56,6 +57,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @throws KeyValueException
      * @throws RPCException
      */
+    #[\Override]
     public function deleteMultipleAsync(iterable $keys): bool
     {
         // Handle someone never calling commitAsync()
@@ -75,6 +77,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @throws KeyValueException
      * @throws RPCException
      */
+    #[\Override]
     public function setAsync(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
         return $this->setMultipleAsync([$key => $value], $ttl);
@@ -88,6 +91,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @throws KeyValueException
      * @throws RPCException
      */
+    #[\Override]
     public function setMultipleAsync(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
         // Handle someone never calling commitAsync()
@@ -107,6 +111,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * @throws KeyValueException
      * @throws RPCException
      */
+    #[\Override]
     public function commitAsync(): bool
     {
         try {
