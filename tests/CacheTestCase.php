@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
+use Testo\Test;
+use Testo\Assert;
+use Testo\Data\DataProvider;
+use Testo\Expect;
+use Testo\Core\Exception\SkipTest;
+use Testo\Lifecycle\BeforeTest;
 use RoadRunner\KV\DTO\V1\Item;
 use RoadRunner\KV\DTO\V1\Request;
 use RoadRunner\KV\DTO\V1\Response;
@@ -84,14 +89,16 @@ abstract class CacheTestCase extends TestCase
         return $result;
     }
 
+    #[Test]
     public function testName(): void
     {
         $driver = $this->cache();
 
-        $this->assertSame($this->name, $driver->getName());
+        Assert::same($driver->getName(), $this->name);
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testTtl(SerializerInterface $serializer): void
     {
         [$key, $expected] = [$this->randomString(), $this->now()];
@@ -108,19 +115,21 @@ abstract class CacheTestCase extends TestCase
 
         $actual = $driver->getTtl($key);
 
-        $this->assertNotNull($actual);
-        $this->assertEquals($expected, $actual);
+        Assert::notNull($actual);
+        Assert::equals($actual, $expected);
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testNoTtl(SerializerInterface $serializer): void
     {
         $driver = $this->cache(['kv.TTL' => $this->response()], $serializer);
 
-        $this->assertNull($driver->getTtl('key'));
+        Assert::null($driver->getTtl('key'));
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testMultipleTtl(SerializerInterface $serializer): void
     {
         $keys = [$this->randomString(), $this->randomString()];
@@ -144,12 +153,13 @@ abstract class CacheTestCase extends TestCase
         $actual = $driver->getMultipleTtl($keys);
 
         foreach ($actual as $key => $time) {
-            $this->assertContains($key, $keys);
-            $this->assertEquals($expected, $time);
+            Assert::contains($keys, $key);
+            Assert::equals($time, $expected);
         }
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testMultipleTtlWithMissingTime(SerializerInterface $serializer): void
     {
         $keys = [$this->randomString(), $this->randomString(), $this->randomString(), $this->randomString()];
@@ -168,14 +178,15 @@ abstract class CacheTestCase extends TestCase
         $actual = $driver->getMultipleTtl($keys);
 
         foreach ($actual as $key => $time) {
-            $this->assertContains($key, $keys);
+            Assert::contains($keys, $key);
 
             $expectedForKey = $key === $keys[0] ? $expected : null;
-            $this->assertEquals($expectedForKey, $time);
+            Assert::equals($time, $expectedForKey);
         }
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testTtlWithInvalidResponseKey(SerializerInterface $serializer): void
     {
         $driver = $this->cache([
@@ -188,10 +199,11 @@ abstract class CacheTestCase extends TestCase
             ]),
         ], $serializer);
 
-        $this->assertNull($driver->getTtl('__invalid__'));
+        Assert::null($driver->getTtl('__invalid__'));
     }
 
     #[DataProvider('methodsDataProvider')]
+    #[Test]
     public function testBadStorageNameOnAnyMethodExecution(callable $handler): void
     {
         // When RPC ServiceException like
@@ -200,14 +212,11 @@ abstract class CacheTestCase extends TestCase
         };
 
         // Then expects message like that cache storage has not been defined
-        $this->expectException(StorageException::class);
-        $this->expectExceptionMessage(
-            \sprintf(
-                'Storage "%s" has not been defined. Please make sure your ' .
-                'RoadRunner "kv" configuration contains a storage key named "%1$s"',
-                $this->name,
-            ),
-        );
+        Expect::exception(StorageException::class)->withMessageContaining(\sprintf(
+            'Storage "%s" has not been defined. Please make sure your ' .
+            'RoadRunner "kv" configuration contains a storage key named "%1$s"',
+            $this->name,
+        ));
 
         $driver = $this->cache([
             'kv.Has' => $error,
@@ -226,6 +235,7 @@ abstract class CacheTestCase extends TestCase
         }
     }
 
+    #[Test]
     public function testTtlNotAvailable(): void
     {
         // When RPC ServiceException like
@@ -234,14 +244,11 @@ abstract class CacheTestCase extends TestCase
         };
 
         // Then expects message like that TTL not available
-        $this->expectException(NotImplementedException::class);
-        $this->expectExceptionMessage(
-            \sprintf(
-                'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
-                'use another driver for the storage if you require this functionality',
-                $this->name,
-            ),
-        );
+        Expect::exception(NotImplementedException::class)->withMessageContaining(\sprintf(
+            'Storage "%s" does not support kv.TTL RPC method execution. Please ' .
+            'use another driver for the storage if you require this functionality',
+            $this->name,
+        ));
 
         $driver = $this->cache(['kv.TTL' => $error]);
 
@@ -249,6 +256,7 @@ abstract class CacheTestCase extends TestCase
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testGet(SerializerInterface $serializer): void
     {
         $expected = $this->randomString(1024);
@@ -259,26 +267,29 @@ abstract class CacheTestCase extends TestCase
             ]),
         ], $serializer);
 
-        $this->assertSame($expected, $driver->get('key'));
+        Assert::same($driver->get('key'), $expected);
     }
 
+    #[Test]
     public function testGetWhenValueNotExists(): void
     {
         $driver = $this->cache(['kv.MGet' => $this->response()]);
 
-        $this->assertNull($driver->get('key'));
+        Assert::null($driver->get('key'));
     }
 
+    #[Test]
     public function testGetDefaultWhenValueNotExists(): void
     {
         $expected = $this->randomString();
 
         $driver = $this->cache(['kv.MGet' => $this->response()]);
 
-        $this->assertSame($expected, $driver->get('key', $expected));
+        Assert::same($driver->get('key', $expected), $expected);
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testGetMultiple(SerializerInterface $serializer): void
     {
         $expected = [
@@ -298,10 +309,11 @@ abstract class CacheTestCase extends TestCase
 
         $actual = $driver->getMultiple(\array_keys($expected));
 
-        $this->assertSame($expected, \iterator_to_array($actual));
+        Assert::same(\iterator_to_array($actual), $expected);
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testHas(SerializerInterface $serializer): void
     {
         $key = $this->randomString();
@@ -312,10 +324,11 @@ abstract class CacheTestCase extends TestCase
             ]),
         ], $serializer);
 
-        $this->assertTrue($driver->has($key));
+        Assert::true($driver->has($key));
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testHasWhenNotExists(SerializerInterface $serializer): void
     {
         $key = $this->randomString();
@@ -324,10 +337,11 @@ abstract class CacheTestCase extends TestCase
             'kv.Has' => $this->response(),
         ], $serializer);
 
-        $this->assertFalse($driver->has($key));
+        Assert::false($driver->has($key));
     }
 
     #[DataProvider('serializersDataProvider')]
+    #[Test]
     public function testHasWithInvalidResponse(SerializerInterface $serializer): void
     {
         $key = $this->randomString();
@@ -338,22 +352,23 @@ abstract class CacheTestCase extends TestCase
             ]),
         ], $serializer);
 
-        $this->assertFalse($driver->has('__invalid_key__'));
+        Assert::false($driver->has('__invalid_key__'));
     }
 
+    #[Test]
     public function testClear(): void
     {
         $driver = $this->cache(['kv.Clear' => $this->response()]);
 
         $result = $driver->clear();
 
-        $this->assertTrue($result);
+        Assert::true($result);
     }
 
+    #[Test]
     public function testClearError(): void
     {
-        $this->expectException(KeyValueException::class);
-        $this->expectExceptionMessage('Something went wrong');
+        Expect::exception(KeyValueException::class)->withMessageContaining('Something went wrong');
 
         $driver = $this->cache([
             'kv.Clear' => function () {
@@ -364,27 +379,26 @@ abstract class CacheTestCase extends TestCase
         $driver->clear();
     }
 
+    #[Test]
     public function testClearMethodNotFoundError(): void
     {
-        $this->expectException(KeyValueException::class);
-        $this->expectExceptionMessage(
-            'RoadRunner does not support kv.Clear RPC method. ' .
-            'Please make sure you are using RoadRunner v2.3.1 or higher.',
-        );
+        Expect::exception(KeyValueException::class)->withMessageContaining('RoadRunner does not support kv.Clear RPC method. ' .
+        'Please make sure you are using RoadRunner v2.3.1 or higher.');
 
         $driver = $this->cache();
         $driver->clear();
     }
 
     #[DataProvider('serializersWithValuesDataProvider')]
+    #[Test]
     public function testSet(SerializerInterface $serializer, $expected): void
     {
         if (\is_float($expected) && \is_nan($expected)) {
-            $this->markTestSkipped('Unable to execute test for NAN float value');
+            throw new SkipTest('Unable to execute test for NAN float value');
         }
 
         if (\is_resource($expected)) {
-            $this->markTestSkipped('Unable to execute test for resource value');
+            throw new SkipTest('Unable to execute test for resource value');
         }
 
         $driver = $this->getAssertableCacheOnSet($serializer, ['key' => $expected]);
@@ -393,14 +407,15 @@ abstract class CacheTestCase extends TestCase
     }
 
     #[DataProvider('serializersWithValuesDataProvider')]
+    #[Test]
     public function testMultipleSet(SerializerInterface $serializer, $value): void
     {
         if (\is_float($value) && \is_nan($value)) {
-            $this->markTestSkipped('Unable to execute test for NAN float value');
+            throw new SkipTest('Unable to execute test for NAN float value');
         }
 
         if (\is_resource($value)) {
-            $this->markTestSkipped('Unable to execute test for resource value');
+            throw new SkipTest('Unable to execute test for resource value');
         }
 
         $expected = ['key' => $value, 'key2' => $value];
@@ -409,6 +424,7 @@ abstract class CacheTestCase extends TestCase
         $driver->setMultiple($expected);
     }
 
+    #[Test]
     public function testSetWithRelativeIntTTL(): void
     {
         $seconds = 0xDEAD_BEEF;
@@ -423,7 +439,7 @@ abstract class CacheTestCase extends TestCase
             'kv.Set' => function (Request $request) use ($expected) {
                 /** @var Item $item */
                 $item = $request->getItems()[0];
-                $this->assertSame($expected, $item->getTimeout());
+                Assert::same($item->getTimeout(), $expected);
 
                 return $this->response();
             },
@@ -433,6 +449,7 @@ abstract class CacheTestCase extends TestCase
         $driver->set('key', 'value', $seconds);
     }
 
+    #[Test]
     public function testSetWithRelativeDateIntervalTTL(): void
     {
         $seconds = 0xDEAD_BEEF;
@@ -449,7 +466,7 @@ abstract class CacheTestCase extends TestCase
             'kv.Set' => function (Request $request) use ($expected) {
                 /** @var Item $item */
                 $item = $request->getItems()[0];
-                $this->assertSame($expected, $item->getTimeout());
+                Assert::same($item->getTimeout(), $expected);
 
                 return $this->response();
             },
@@ -459,18 +476,16 @@ abstract class CacheTestCase extends TestCase
     }
 
     #[DataProvider('valuesDataProvider')]
+    #[Test]
     public function testSetWithInvalidTTL(mixed $invalidTTL): void
     {
         $type = \get_debug_type($invalidTTL);
 
         if ($invalidTTL === null || \is_int($invalidTTL) || $invalidTTL instanceof \DateTimeInterface) {
-            $this->markTestSkipped('Can not complete negative test for valid TTL of type ' . $type);
+            throw new SkipTest('Can not complete negative test for valid TTL of type ' . $type);
         }
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Cache item ttl (expiration) must be of type int or \DateInterval, but ' . $type . ' passed',
-        );
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache item ttl (expiration) must be of type int or \DateInterval, but ' . $type . ' passed');
 
         $driver = $this->cache();
 
@@ -478,15 +493,17 @@ abstract class CacheTestCase extends TestCase
         $driver->set('key', 'value', $invalidTTL);
     }
 
+    #[Test]
     public function testDelete(): void
     {
         $driver = $this->cache(['kv.Delete' => $this->response([])]);
-        $this->assertTrue($driver->delete('key'));
+        Assert::true($driver->delete('key'));
     }
 
+    #[Test]
     public function testDeleteWithError(): void
     {
-        $this->expectException(KeyValueException::class);
+        Expect::exception(KeyValueException::class);
 
         $driver = $this->cache([
             'kv.Delete' => function () {
@@ -497,15 +514,17 @@ abstract class CacheTestCase extends TestCase
         $driver->delete('key');
     }
 
+    #[Test]
     public function testDeleteMultiple(): void
     {
         $driver = $this->cache(['kv.Delete' => $this->response([])]);
-        $this->assertTrue($driver->deleteMultiple(['key', 'key2']));
+        Assert::true($driver->deleteMultiple(['key', 'key2']));
     }
 
+    #[Test]
     public function testDeleteMultipleWithError(): void
     {
-        $this->expectException(KeyValueException::class);
+        Expect::exception(KeyValueException::class);
 
         $driver = $this->cache([
             'kv.Delete' => function () {
@@ -516,10 +535,10 @@ abstract class CacheTestCase extends TestCase
         $driver->deleteMultiple(['key', 'key2']);
     }
 
+    #[Test]
     public function testGetMultipleWithInvalidKey(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
 
         $driver = $this->cache();
         foreach ($driver->getMultiple([0 => 0xDEAD_BEEF]) as $_) {
@@ -527,24 +546,25 @@ abstract class CacheTestCase extends TestCase
         }
     }
 
+    #[Test]
     public function testSetMultipleWithInvalidKey(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
 
         $driver = $this->cache();
         $driver->setMultiple([0 => 0xDEAD_BEEF]);
     }
 
+    #[Test]
     public function testDeleteMultipleWithInvalidKey(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
 
         $driver = $this->cache();
         $driver->deleteMultiple([0 => 0xDEAD_BEEF]);
     }
 
+    #[Test]
     public function testImmutableWhileSwitchSerialization(): void
     {
         $expected = $this->randomString(1024);
@@ -556,12 +576,13 @@ abstract class CacheTestCase extends TestCase
         $decorated = $driver->withSerializer(new DefaultSerializer());
 
         // Behaviour MUST NOT be changed
-        $this->assertSame($expected, $driver->get('key'));
+        Assert::same($driver->get('key'), $expected);
     }
 
+    #[Test]
     public function testErrorOnInvalidSerialization(): void
     {
-        $this->expectException(SerializationException::class);
+        Expect::exception(SerializationException::class);
 
         $expected = $this->randomString(1024);
 
@@ -573,10 +594,10 @@ abstract class CacheTestCase extends TestCase
             ->get('key');
     }
 
+    #[BeforeTest]
     public function setUp(): void
     {
         $this->name = \bin2hex(\random_bytes(32));
-        parent::setUp();
     }
 
     /**
@@ -631,11 +652,11 @@ abstract class CacheTestCase extends TestCase
                 foreach ($items as $item) {
                     $result[] = $item;
 
-                    $this->assertArrayHasKey($item->getKey(), $expected);
-                    $this->assertEquals($expected[$item->getKey()], $serializer->unserialize($item->getValue()));
+                    Assert::array($expected)->hasKeys($item->getKey());
+                    Assert::equals($serializer->unserialize($item->getValue()), $expected[$item->getKey()]);
                 }
 
-                $this->assertSame($items->count(), \count($expected));
+                Assert::same(\count($expected), $items->count());
 
                 return $this->response($result);
             },
