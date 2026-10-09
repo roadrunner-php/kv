@@ -1,29 +1,38 @@
-<a href="https://roadrunner.dev" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/roadrunner-server/.github/assets/8040338/e6bde856-4ec6-4a52-bd5b-bfe78736c1ff">
-    <img align="center" src="https://github.com/roadrunner-server/.github/assets/8040338/040fb694-1dd3-4865-9d29-8e0748c2c8b8">
-  </picture>
-</a>
+<p align="center">
+    <a href="https://roadrunner.dev"><picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://github.com/roadrunner-server/.github/assets/8040338/e6bde856-4ec6-4a52-bd5b-bfe78736c1ff">
+        <img alt="RoadRunner" src="https://github.com/roadrunner-server/.github/assets/8040338/040fb694-1dd3-4865-9d29-8e0748c2c8b8" style="width: 6in; display: block">
+    </picture></a>
+</p>
 
-# RoadRunner KV Plugin Bridge
+<p align="center">PSR-16 cache on top of the RoadRunner KV plugin</p>
 
-[![PHP Version Require](https://poser.pugx.org/spiral/roadrunner-kv/require/php)](https://packagist.org/packages/spiral/roadrunner-kv)
-[![Latest Stable Version](https://poser.pugx.org/spiral/roadrunner-kv/v/stable)](https://packagist.org/packages/spiral/roadrunner-kv)
-[![phpunit](https://github.com/spiral/roadrunner-kv/actions/workflows/phpunit.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
-[![psalm](https://github.com/spiral/roadrunner-kv/actions/workflows/psalm.yml/badge.svg)](https://github.com/spiral/roadrunner-kv/actions)
-[![Total Downloads](https://poser.pugx.org/spiral/roadrunner-kv/downloads)](https://packagist.org/packages/spiral/roadrunner-kv)
+<div align="center">
 
-<b>[Documentation](https://docs.roadrunner.dev/key-value/overview-kv)</b> | [Framework Bundle](https://github.com/spiral/framework)
+[![Documentation](https://img.shields.io/badge/Documentation-blue?style=for-the-badge&logo=gitbook&logoColor=white)](https://docs.roadrunner.dev/docs/key-value/overview-kv)
+[![Sponsor](https://img.shields.io/static/v1?style=for-the-badge&label=&message=Sponsor&logo=githubsponsors&logoColor=white&color=%23EA4AAA)](https://github.com/sponsors/roadrunner-server)
 
-This repository contains the codebase PSR-16 PHP cache bridge using kv RoadRunner plugin.
+[![Psalm Level](https://shepherd.dev/github/roadrunner-php/kv/level.svg)](https://shepherd.dev/github/roadrunner-php/kv)
+[![Type Coverage](https://shepherd.dev/github/roadrunner-php/kv/coverage.svg)](https://shepherd.dev/github/roadrunner-php/kv)
 
-## Installation
+</div>
 
-To install application server and KV codebase
+<br />
+
+This package lets a PHP application use the storages of the [RoadRunner KV plugin](https://docs.roadrunner.dev/docs/key-value/overview-kv) (memory, boltdb, redis, memcached and others) as a PSR-16 cache, talking to RoadRunner over RPC.
+
+## Get Started
+
+### Installation
 
 ```bash
 composer require spiral/roadrunner-kv
 ```
+
+[![PHP](https://img.shields.io/packagist/php-v/spiral/roadrunner-kv.svg?style=flat-square&logo=php)](https://packagist.org/packages/spiral/roadrunner-kv)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/spiral/roadrunner-kv.svg?style=flat-square&logo=packagist)](https://packagist.org/packages/spiral/roadrunner-kv)
+[![License](https://img.shields.io/packagist/l/spiral/roadrunner-kv.svg?style=flat-square)](LICENSE)
+[![Total Downloads](https://img.shields.io/packagist/dt/spiral/roadrunner-kv.svg?style=flat-square)](https://packagist.org/packages/spiral/roadrunner-kv/stats)
 
 You can use the convenient installer to download the latest available compatible
 version of RoadRunner server:
@@ -33,7 +42,7 @@ composer require spiral/roadrunner-cli --dev
 vendor/bin/rr get
 ```
 
-## Usage
+### Configuration
 
 First you need to add at least one kv plugin to your roadrunner configuration. 
 For example, such a configuration would be quite feasible to run:
@@ -49,12 +58,14 @@ kv:
         interval: 10
 ```
 
-> **Note**
+> [!NOTE]
 > Read more about all available drivers on the 
-> [documentation](https://docs.roadrunner.dev) page.
+> [documentation](https://docs.roadrunner.dev/docs/key-value/overview-kv) page.
 
 After starting the server with this configuration, one driver named "`test`" 
 will be available to you.
+
+### Usage
 
 The following code will allow writing and reading an arbitrary value from the 
 RoadRunner server.
@@ -78,10 +89,21 @@ $cache->set('key', 'value');
 echo $cache->get('key'); // string(5) "value"
 ```
 
+## Serialization
+
+Values are serialized with PHP's native `serialize()` by default. Pass another serializer to the factory to change that:
+
+- `IgbinarySerializer` — requires the `igbinary` extension;
+- `SodiumSerializer` — encrypts values produced by an inner serializer with a keypair from `sodium_crypto_box_keypair()`, requires the `sodium` extension.
+
+```php
+use Spiral\RoadRunner\KeyValue\Factory;
+use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
+use Spiral\RoadRunner\KeyValue\Serializer\SodiumSerializer;
+
+$factory = new Factory($rpc, new SodiumSerializer(new DefaultSerializer(), $key));
+```
+
 <a href="https://spiral.dev/">
 <img src="https://user-images.githubusercontent.com/773481/220979012-e67b74b5-3db1-41b7-bdb0-8a042587dedc.jpg" alt="try Spiral Framework" />
 </a>
-
-## License:
-
-MIT License (MIT). Please see [`LICENSE`](./LICENSE) for more information. Maintained by [Spiral Scout](https://spiralscout.com).
