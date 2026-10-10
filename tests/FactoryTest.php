@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
-use Testo\Test;
-use Testo\Assert\ExpectNoAssertions;
-use Testo\Assert;
 use Spiral\RoadRunner\KeyValue\AsyncCache;
 use Spiral\RoadRunner\KeyValue\Cache;
 use Spiral\RoadRunner\KeyValue\Factory;
@@ -14,6 +11,9 @@ use Spiral\RoadRunner\KeyValue\FactoryInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\RawSerializerStub;
+use Testo\Assert;
+use Testo\Assert\ExpectNoAssertions;
+use Testo\Test;
 
 #[Test]
 final class FactoryTest extends TestCase

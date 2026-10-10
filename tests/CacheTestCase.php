@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Spiral\RoadRunner\KeyValue\Tests;
 
-use Testo\Test;
-use Testo\Assert;
-use Testo\Data\DataProvider;
-use Testo\Expect;
-use Testo\Core\Exception\SkipTest;
-use Testo\Lifecycle\BeforeTest;
 use RoadRunner\KV\DTO\V1\Item;
 use RoadRunner\KV\DTO\V1\Request;
 use RoadRunner\KV\DTO\V1\Response;
@@ -26,6 +20,12 @@ use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 use Spiral\RoadRunner\KeyValue\Serializer\SodiumSerializer;
 use Spiral\RoadRunner\KeyValue\StorageInterface;
 use Spiral\RoadRunner\KeyValue\Tests\Stub\RawSerializerStub;
+use Testo\Assert;
+use Testo\Core\Exception\SkipTest;
+use Testo\Data\DataProvider;
+use Testo\Expect;
+use Testo\Lifecycle\BeforeTest;
+use Testo\Test;
 
 abstract class CacheTestCase extends TestCase
 {
