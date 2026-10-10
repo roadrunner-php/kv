@@ -15,9 +15,9 @@ use Spiral\RoadRunner\KeyValue\Exception\KeyValueException;
 use Spiral\RoadRunner\KeyValue\Exception\NotImplementedException;
 use Spiral\RoadRunner\KeyValue\Exception\SerializationException;
 use Spiral\RoadRunner\KeyValue\Exception\StorageException;
+use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareTrait;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
-use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 
 /**
  * @psalm-suppress PropertyNotSetInConstructor
