@@ -27,19 +27,19 @@ This package lets a PHP application use the storages of the [RoadRunner KV plugi
 ### Installation
 
 ```bash
-composer require spiral/roadrunner-kv
+composer require roadrunner/kv
 ```
 
-[![PHP](https://img.shields.io/packagist/php-v/spiral/roadrunner-kv.svg?style=flat-square&logo=php)](https://packagist.org/packages/spiral/roadrunner-kv)
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/spiral/roadrunner-kv.svg?style=flat-square&logo=packagist)](https://packagist.org/packages/spiral/roadrunner-kv)
-[![License](https://img.shields.io/packagist/l/spiral/roadrunner-kv.svg?style=flat-square)](LICENSE)
-[![Total Downloads](https://img.shields.io/packagist/dt/spiral/roadrunner-kv.svg?style=flat-square)](https://packagist.org/packages/spiral/roadrunner-kv/stats)
+[![PHP](https://img.shields.io/packagist/php-v/roadrunner/kv.svg?style=flat-square&logo=php)](https://packagist.org/packages/roadrunner/kv)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/roadrunner/kv.svg?style=flat-square&logo=packagist)](https://packagist.org/packages/roadrunner/kv)
+[![License](https://img.shields.io/packagist/l/roadrunner/kv.svg?style=flat-square)](LICENSE)
+[![Total Downloads](https://img.shields.io/packagist/dt/roadrunner/kv.svg?style=flat-square)](https://packagist.org/packages/roadrunner/kv/stats)
 
 You can use the convenient installer to download the latest available compatible
 version of RoadRunner server:
 
 ```bash
-composer require spiral/roadrunner-cli --dev
+composer require roadrunner/cli --dev
 vendor/bin/rr get
 ```
 
