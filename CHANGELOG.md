@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.0](https://github.com/roadrunner-php/kv/compare/v4.4.0...v4.5.0) (2026-10-10)
+
+
+### Features
+
+* rename the package to roadrunner/kv ([eb386a0](https://github.com/roadrunner-php/kv/commit/eb386a0e02febdee1b8c255380968e73fba4d7e4))
+* support RoadRunner v3 ([cf9860e](https://github.com/roadrunner-php/kv/commit/cf9860efe1367af6a5a0806ccadb394076aa07a3))
+
 ## [4.4.0](https://github.com/roadrunner-php/kv/compare/v4.3.1...v4.4.0) (2026-10-09)
 
 
