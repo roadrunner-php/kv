@@ -1,38 +1,50 @@
 {
-    "name": "spiral/roadrunner-kv",
+    "name": "roadrunner/kv",
     "type": "library",
-    "description": "RoadRunner kv plugin bridge",
+    "description": "PSR-16 cache on top of the RoadRunner Key-Value plugin storages (memory, boltdb, redis, memcached) over RPC",
+    "keywords": [
+        "roadrunner",
+        "kv",
+        "key-value",
+        "cache",
+        "psr-16",
+        "simple-cache",
+        "redis",
+        "memcached",
+        "boltdb"
+    ],
     "license": "MIT",
     "authors": [
         {
-            "name": "Wolfy-J",
-            "email": "wolfy.jd@gmail.com"
+            "name": "Anton Titov",
+            "homepage": "https://github.com/wolfy-j"
         },
         {
-            "name": "Pavel Buchnev (butschster)",
-            "email": "pavel.buchnev@spiralscout.com"
+            "name": "Pavel Buchnev",
+            "homepage": "https://github.com/butschster"
         },
         {
-            "name": "Aleksei Gagarin (roxblnfk)",
-            "email": "alexey.gagarin@spiralscout.com"
+            "name": "Aleksei Gagarin",
+            "homepage": "https://github.com/roxblnfk"
         },
         {
-            "name": "Maksim Smakouz (msmakouz)",
-            "email": "maksim.smakouz@spiralscout.com"
+            "name": "Maksim Smakouz",
+            "homepage": "https://github.com/msmakouz"
         },
         {
-            "name": "Kirill Nesmeyanov (SerafimArts)",
-            "email": "kirill.nesmeyanov@spiralscout.com"
+            "name": "Kirill Nesmeyanov",
+            "homepage": "https://github.com/SerafimArts"
         },
         {
             "name": "RoadRunner Community",
-            "homepage": "https://github.com/spiral/roadrunner/graphs/contributors"
+            "homepage": "https://github.com/roadrunner-server/roadrunner/graphs/contributors"
         }
     ],
     "homepage": "https://roadrunner.dev/",
     "support": {
-        "docs": "https://docs.roadrunner.dev",
+        "docs": "https://docs.roadrunner.dev/docs/key-value/overview-kv",
         "issues": "https://github.com/roadrunner-server/roadrunner/issues",
+        "source": "https://github.com/roadrunner-php/kv",
         "chat": "https://discord.gg/V6EK4he"
     },
     "funding": [
@@ -45,19 +57,26 @@
         "php": ">=8.2",
         "ext-json": "*",
         "psr/simple-cache": "2 - 3",
-        "roadrunner-php/roadrunner-api-dto": "^1.18 || ^2.0",
-        "spiral/goridge": "^4.3",
+        "roadrunner/api-dto": "^2.1",
+        "roadrunner/goridge": "^4.5",
         "spiral/roadrunner": "^3.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "Spiral\\RoadRunner\\KeyValue\\": "src"
-        }
     },
     "require-dev": {
         "spiral/code-style": "^2.3.1",
         "testo/testo": "^0.10.55",
         "vimeo/psalm": "^6 || ^7"
+    },
+    "replace": {
+        "spiral/roadrunner-kv": "self.version"
+    },
+    "suggest": {
+        "ext-igbinary": "(>3.1.6) Igbinary serializer support",
+        "ext-sodium": "Sodium serializer support"
+    },
+    "autoload": {
+        "psr-4": {
+            "Spiral\\RoadRunner\\KeyValue\\": "src"
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -70,10 +89,6 @@
         "test": "vendor/bin/testo",
         "psalm": "psalm",
         "psalm:baseline": "psalm --set-baseline=psalm-baseline.xml"
-    },
-    "suggest": {
-        "ext-igbinary": "(>3.1.6) Igbinary serailizer support",
-        "ext-sodium": "Sodium serailizer support"
     },
     "config": {
         "sort-packages": true,
