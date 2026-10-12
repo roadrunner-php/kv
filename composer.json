@@ -62,6 +62,8 @@
         "spiral/roadrunner": "^3.0"
     },
     "require-dev": {
+        "llm/skills": "^1.14",
+        "roxblnfk/unpoly": "^1.8",
         "spiral/code-style": "^2.3.1",
         "testo/testo": "^0.10.55",
         "vimeo/psalm": "^6 || ^7"
@@ -91,6 +93,9 @@
         "psalm:baseline": "psalm --set-baseline=psalm-baseline.xml"
     },
     "config": {
+        "allow-plugins": {
+            "llm/skills": true
+        },
         "sort-packages": true,
         "audit": {
             "ignore": {
