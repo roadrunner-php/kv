@@ -1,20 +1,7 @@
-# IDEA
-.idea/
-*.iml
-
-# Composer
-composer.phar
-/vendor/
+/.*/
+!/.github/
 /runtime/
-composer.lock
-
-# OS
-.DS_Store
-Thumbs.db
-*.exe
-
-# Other
-.php_cs.cache
-clover.xml
-.env
-builds
+/vendor/
+/.env
+*.log
+/composer.lock
