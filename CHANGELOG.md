@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.5.2](https://github.com/roadrunner-php/kv/compare/v4.5.1...v4.5.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* accept digit-only and int cache keys ([#57](https://github.com/roadrunner-php/kv/issues/57)) ([056450d](https://github.com/roadrunner-php/kv/commit/056450d57cccb2f774ce02d2d09c439726a474a2)), closes [#56](https://github.com/roadrunner-php/kv/issues/56)
+
 ## [4.5.1](https://github.com/roadrunner-php/kv/compare/v4.5.0...v4.5.1) (2026-10-19)
 
 
