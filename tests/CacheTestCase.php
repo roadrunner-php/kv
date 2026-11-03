@@ -538,10 +538,21 @@ abstract class CacheTestCase extends TestCase
     #[Test]
     public function testGetMultipleWithInvalidKey(): void
     {
-        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but float passed');
 
         $driver = $this->cache();
-        foreach ($driver->getMultiple([0 => 0xDEAD_BEEF]) as $_) {
+        foreach ($driver->getMultiple([1.5]) as $_) {
+            //
+        }
+    }
+
+    #[Test]
+    public function testGetMultipleTtlWithInvalidKey(): void
+    {
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but float passed');
+
+        $driver = $this->cache();
+        foreach ($driver->getMultipleTtl([1.5]) as $_) {
             //
         }
     }
@@ -549,19 +560,142 @@ abstract class CacheTestCase extends TestCase
     #[Test]
     public function testSetMultipleWithInvalidKey(): void
     {
-        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but float passed');
 
         $driver = $this->cache();
-        $driver->setMultiple([0 => 0xDEAD_BEEF]);
+        $driver->setMultiple((static fn(): \Generator => yield 1.5 => 0xDEAD_BEEF)());
     }
 
     #[Test]
     public function testDeleteMultipleWithInvalidKey(): void
     {
-        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but float passed');
 
         $driver = $this->cache();
-        $driver->deleteMultiple([0 => 0xDEAD_BEEF]);
+        $driver->deleteMultiple([1.5]);
+    }
+
+    #[Test]
+    public function testSetWithNumericKey(): void
+    {
+        $sent = [];
+        $driver = $this->cache(['kv.Set' => $this->recordItems($sent)]);
+
+        $driver->set('12345678', 'value');
+
+        Assert::same($sent, [['12345678', \serialize('value')]]);
+    }
+
+    #[Test]
+    public function testSetMultipleCastsIntKeysToString(): void
+    {
+        $sent = [];
+        $driver = $this->cache(['kv.Set' => $this->recordItems($sent)]);
+
+        $driver->setMultiple(['12345678' => 'a', 0 => 'b', -1 => 'c', 'key' => 'd', '01' => 'e']);
+
+        Assert::same($sent, [
+            ['12345678', \serialize('a')],
+            ['0', \serialize('b')],
+            ['-1', \serialize('c')],
+            ['key', \serialize('d')],
+            ['01', \serialize('e')],
+        ]);
+    }
+
+    #[Test]
+    public function testDeleteMultipleCastsIntKeysToString(): void
+    {
+        $sent = [];
+        $driver = $this->cache(['kv.Delete' => $this->recordItems($sent)]);
+
+        $driver->deleteMultiple(\array_keys(['123' => 'a', 'key' => 'b']));
+
+        Assert::same(\array_column($sent, 0), ['123', 'key']);
+    }
+
+    #[Test]
+    public function testGetWithNumericKey(): void
+    {
+        $driver = $this->cache([
+            'kv.MGet' => $this->response([new Item(['key' => '123', 'value' => \serialize('value')])]),
+        ]);
+
+        Assert::same($driver->get('123'), 'value');
+    }
+
+    #[Test]
+    public function testGetMultipleWithNumericKeys(): void
+    {
+        $sent = [];
+        $driver = $this->cache([
+            'kv.MGet' => $this->recordItems($sent, [
+                new Item(['key' => '123', 'value' => \serialize('a')]),
+                new Item(['key' => '0', 'value' => \serialize('b')]),
+            ]),
+        ]);
+
+        $actual = [];
+        foreach ($driver->getMultiple(['123', 0, 'key'], 'default') as $key => $value) {
+            $actual[] = [$key, $value];
+        }
+
+        Assert::same(\array_column($sent, 0), ['123', '0', 'key']);
+        Assert::same($actual, [['123', 'a'], ['0', 'b'], ['key', 'default']]);
+    }
+
+    #[Test]
+    public function testGetMultipleAcceptsGenerator(): void
+    {
+        $driver = $this->cache([
+            'kv.MGet' => $this->response([new Item(['key' => 'key0', 'value' => \serialize('value')])]),
+        ]);
+
+        $keys = (static function (): \Generator {
+            yield 'key0';
+            yield 'key1';
+        })();
+
+        Assert::same(\iterator_to_array($driver->getMultiple($keys)), ['key0' => 'value', 'key1' => null]);
+    }
+
+    #[Test]
+    public function testGetMultipleTtlWithNumericKeys(): void
+    {
+        $timeout = '2030-01-02T03:04:05+00:00';
+        $driver = $this->cache([
+            'kv.TTL' => $this->response([new Item(['key' => '123', 'timeout' => $timeout])]),
+        ]);
+
+        $actual = [];
+        foreach ($driver->getMultipleTtl([123, 'key']) as $key => $ttl) {
+            $actual[] = [$key, $ttl?->format(\DateTimeInterface::RFC3339)];
+        }
+
+        Assert::same($actual, [['123', $timeout], ['key', null]]);
+    }
+
+    #[Test]
+    public function testGetMultipleTtlAcceptsGenerator(): void
+    {
+        $driver = $this->cache(['kv.TTL' => $this->response()]);
+
+        $keys = (static function (): \Generator {
+            yield 'key0';
+            yield 'key1';
+        })();
+
+        Assert::same(\iterator_to_array($driver->getMultipleTtl($keys)), ['key0' => null, 'key1' => null]);
+    }
+
+    #[Test]
+    public function testHasWithNumericKey(): void
+    {
+        $driver = $this->cache([
+            'kv.Has' => $this->response([new Item(['key' => '123'])]),
+        ]);
+
+        Assert::true($driver->has('123'));
     }
 
     #[Test]
@@ -723,6 +857,24 @@ abstract class CacheTestCase extends TestCase
     protected function response(array $items = []): string
     {
         return (new Response(['items' => $items]))->serializeToString();
+    }
+
+    /**
+     * Returns an RPC handler that records the request items as [key, value] pairs and responds with $response.
+     *
+     * @param list<array{string, string}> $sent
+     * @param list<Item> $response
+     */
+    protected function recordItems(array &$sent, array $response = []): \Closure
+    {
+        return function (Request $request) use (&$sent, $response): string {
+            /** @var Item $item */
+            foreach ($request->getItems() as $item) {
+                $sent[] = [$item->getKey(), $item->getValue()];
+            }
+
+            return $this->response($response);
+        };
     }
 
     protected function getAssertableCacheOnSet(SerializerInterface $serializer, array $expected): StorageInterface
