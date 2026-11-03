@@ -13,6 +13,10 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <stubs>
+        <!-- With ext-protobuf loaded, Psalm reflects the extension's untemplated class instead of this file -->
+        <file name="vendor/google/protobuf/src/Google/Protobuf/RepeatedField.php" />
+    </stubs>
     <issueHandlers>
         <!-- Making public classes final would break BC for users who extend them -->
         <ClassMustBeFinal errorLevel="suppress" />

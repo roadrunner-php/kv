@@ -20,7 +20,7 @@ use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 class AsyncCache extends Cache implements AsyncStorageInterface
 {
     /**
-     * @var positive-int[]
+     * @var array<positive-int>
      */
     protected array $callsInFlight = [];
 

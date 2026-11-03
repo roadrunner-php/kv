@@ -10,9 +10,6 @@ use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareTrait;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 
-/**
- * @psalm-suppress PropertyNotSetInConstructor
- */
 final class Factory implements FactoryInterface
 {
     use SerializerAwareTrait;
