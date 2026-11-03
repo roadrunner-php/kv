@@ -19,9 +19,6 @@ use Spiral\RoadRunner\KeyValue\Serializer\DefaultSerializer;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerAwareTrait;
 use Spiral\RoadRunner\KeyValue\Serializer\SerializerInterface;
 
-/**
- * @psalm-suppress PropertyNotSetInConstructor
- */
 class Cache implements StorageInterface
 {
     use SerializerAwareTrait;
@@ -114,7 +111,7 @@ class Cache implements StorageInterface
     #[\Override]
     public function get(string $key, mixed $default = null): mixed
     {
-        /** @psalm-suppress MixedAssignment */
+        /** @var mixed $value */
         foreach ($this->getMultiple([$key], $default) as $value) {
             return $value;
         }
@@ -127,7 +124,7 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @psalm-param iterable<array-key> $keys
+     * @param iterable<array-key> $keys
      * @return iterable<string, mixed>
      * @throws KeyValueException
      */
@@ -153,7 +150,7 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @psalm-param positive-int|\DateInterval|null $ttl
+     * @param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
@@ -164,8 +161,8 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @psalm-param iterable<array-key, mixed> $values
-     * @psalm-param positive-int|\DateInterval|null $ttl
+     * @param iterable<array-key, mixed> $values
+     * @param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
      */
@@ -195,7 +192,7 @@ class Cache implements StorageInterface
      *
      * {@inheritDoc}
      *
-     * @psalm-param iterable<array-key> $keys
+     * @param iterable<array-key> $keys
      *
      * @throws KeyValueException
      */
@@ -232,7 +229,6 @@ class Cache implements StorageInterface
     #[\Override]
     public function has(string $key): bool
     {
-        /** @var array<Item> $items */
         $items = $this->call('kv.Has', $this->requestKeys([$key]))
             ->getItems();
 
@@ -252,7 +248,6 @@ class Cache implements StorageInterface
     {
         $result = [];
 
-        /** @var Item $item */
         foreach ($response->getItems() as $item) {
             $result[$item->getKey()] = $item;
         }
@@ -268,7 +263,7 @@ class Cache implements StorageInterface
     {
         $items = [];
 
-        /** @psalm-suppress MixedAssignment */
+        /** @var mixed $key */
         foreach ($keys as $key) {
             $items[] = new Item(['key' => $this->normalizeKey($key)]);
         }
@@ -286,7 +281,10 @@ class Cache implements StorageInterface
         $items = [];
         $serializer = $this->getSerializer();
 
-        /** @psalm-suppress MixedAssignment */
+        /**
+         * @var mixed $key
+         * @var mixed $value
+         */
         foreach ($values as $key => $value) {
             $items[] = new Item([
                 'key' => $this->normalizeKey($key),
@@ -337,15 +335,16 @@ class Cache implements StorageInterface
 
     /**
      * @param non-empty-string $method
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      *
      * @throws KeyValueException
      */
     private function call(string $method, Request $request): Response
     {
         try {
-            return $this->rpc->call($method, $request, Response::class);
+            /** @var Response $response ProtobufCodec decodes into the class passed as options */
+            $response = $this->rpc->call($method, $request, Response::class);
+
+            return $response;
         } catch (ServiceException $e) {
             $message = \str_replace(["\t", "\n"], ' ', $e->getMessage());
 
@@ -358,7 +357,7 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @param array<Item> $items
+     * @param list<Item> $items
      */
     private function request(array $items): Request
     {
@@ -388,7 +387,7 @@ class Cache implements StorageInterface
     {
         $result = [];
 
-        /** @psalm-suppress MixedAssignment */
+        /** @var mixed $key */
         foreach ($keys as $key) {
             $result[] = $this->normalizeKey($key);
         }
