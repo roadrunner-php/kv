@@ -52,6 +52,43 @@ final class AsyncCacheTest extends CacheTestCase
         $driver->commitAsync();
     }
 
+    public function testSetAsyncWithNumericKey(): void
+    {
+        $sent = [];
+        $driver = $this->cache(['kv.Set' => $this->recordItems($sent)]);
+
+        $driver->setAsync('12345678', 'value');
+        $driver->commitAsync();
+
+        Assert::same($sent, [['12345678', \serialize('value')]]);
+    }
+
+    public function testSetMultipleAsyncCastsIntKeysToString(): void
+    {
+        $sent = [];
+        $driver = $this->cache(['kv.Set' => $this->recordItems($sent)]);
+
+        $driver->setMultipleAsync(['12345678' => 'a', 0 => 'b', 'key' => 'c']);
+        $driver->commitAsync();
+
+        Assert::same($sent, [
+            ['12345678', \serialize('a')],
+            ['0', \serialize('b')],
+            ['key', \serialize('c')],
+        ]);
+    }
+
+    public function testDeleteMultipleAsyncCastsIntKeysToString(): void
+    {
+        $sent = [];
+        $driver = $this->cache(['kv.Delete' => $this->recordItems($sent)]);
+
+        $driver->deleteMultipleAsync(\array_keys(['123' => 'a', 'key' => 'b']));
+        $driver->commitAsync();
+
+        Assert::same(\array_column($sent, 0), ['123', 'key']);
+    }
+
     #[DataProvider('serializersWithValuesDataProvider')]
     public function testMultipleSetAsync(SerializerInterface $serializer, mixed $value): void
     {
@@ -183,10 +220,10 @@ final class AsyncCacheTest extends CacheTestCase
 
     public function testSetAsyncMultipleWithInvalidKey(): void
     {
-        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but float passed');
 
         $driver = $this->cache();
-        $driver->setMultipleAsync([0 => 0xDEAD_BEEF]);
+        $driver->setMultipleAsync((static fn(): \Generator => yield 1.5 => 0xDEAD_BEEF)());
         // Make sure not reachable
         Assert::same(false, true);
         $driver->commitAsync();
@@ -194,10 +231,10 @@ final class AsyncCacheTest extends CacheTestCase
 
     public function testDeleteMultipleAsyncWithInvalidKey(): void
     {
-        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but int passed');
+        Expect::exception(InvalidArgumentException::class)->withMessageContaining('Cache key must be a string, but float passed');
 
         $driver = $this->cache();
-        $driver->deleteMultipleAsync([0 => 0xDEAD_BEEF]);
+        $driver->deleteMultipleAsync([1.5]);
         // Make sure not reachable
         Assert::same(false, true);
         $driver->commitAsync();

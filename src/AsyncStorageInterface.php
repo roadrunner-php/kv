@@ -62,7 +62,7 @@ interface AsyncStorageInterface extends StorageInterface
     /**
      * Deletes multiple cache items in a single operation.
      *
-     * @param iterable<string> $keys A list of string-based keys to be deleted.
+     * @param iterable<array-key> $keys A list of keys to be deleted; int keys are cast to string.
      *
      * @return bool True if the items were successfully removed. False if there was an error.
      *

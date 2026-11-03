@@ -52,7 +52,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
      * Note: The current PSR-16 implementation always returns true or
      * exception on error.
      *
-     * @param iterable<string> $keys
+     * @param iterable<array-key> $keys
      *
      * @throws KeyValueException
      * @throws RPCException
@@ -84,7 +84,7 @@ class AsyncCache extends Cache implements AsyncStorageInterface
     }
 
     /**
-     * @param iterable<string, mixed> $values
+     * @param iterable<array-key, mixed> $values
      * @param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      *

@@ -85,6 +85,9 @@ class Cache implements StorageInterface
     #[\Override]
     public function getMultipleTtl(iterable $keys = []): iterable
     {
+        /** @var list<non-empty-string> $keys */
+        $keys = $this->normalizeKeys($keys);
+
         try {
             $response = $this->createIndex(
                 $this->call('kv.TTL', $this->requestKeys($keys)),
@@ -124,14 +127,14 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @psalm-param iterable<string> $keys
+     * @psalm-param iterable<array-key> $keys
      * @return iterable<string, mixed>
      * @throws KeyValueException
      */
     #[\Override]
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        /** @psalm-suppress MixedArgumentTypeCoercion */
+        $keys = $this->normalizeKeys($keys);
         $items = $this->createIndex(
             $this->call('kv.MGet', $this->requestKeys($keys)),
         );
@@ -161,7 +164,7 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @psalm-param iterable<string, mixed> $values
+     * @psalm-param iterable<array-key, mixed> $values
      * @psalm-param positive-int|\DateInterval|null $ttl
      * @psalm-suppress MoreSpecificImplementedParamType
      * @throws KeyValueException
@@ -192,7 +195,7 @@ class Cache implements StorageInterface
      *
      * {@inheritDoc}
      *
-     * @psalm-param iterable<string> $keys
+     * @psalm-param iterable<array-key> $keys
      *
      * @throws KeyValueException
      */
@@ -258,23 +261,23 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @param iterable<string> $keys
+     * @param iterable<mixed> $keys
      * @throws InvalidArgumentException
      */
     protected function requestKeys(iterable $keys): Request
     {
         $items = [];
 
+        /** @psalm-suppress MixedAssignment */
         foreach ($keys as $key) {
-            $this->assertValidKey($key);
-            $items[] = new Item(['key' => $key]);
+            $items[] = new Item(['key' => $this->normalizeKey($key)]);
         }
 
         return $this->request($items);
     }
 
     /**
-     * @param iterable<string, mixed> $values
+     * @param iterable<mixed, mixed> $values
      * @throws SerializationException
      * @throws InvalidArgumentException
      */
@@ -285,10 +288,8 @@ class Cache implements StorageInterface
 
         /** @psalm-suppress MixedAssignment */
         foreach ($values as $key => $value) {
-            $this->assertValidKey($key);
-
             $items[] = new Item([
-                'key' => $key,
+                'key' => $this->normalizeKey($key),
                 'value' => $serializer->serialize($value),
                 'timeout' => $ttl,
             ]);
@@ -377,13 +378,38 @@ class Cache implements StorageInterface
     }
 
     /**
-     * @param mixed|string $key
+     * Materializes the keys, so a one-shot iterator can be read twice.
+     *
+     * @param iterable<mixed> $keys
+     * @return list<string>
      * @throws InvalidArgumentException
      */
-    private function assertValidKey(mixed $key): void
+    private function normalizeKeys(iterable $keys): array
     {
+        $result = [];
+
+        /** @psalm-suppress MixedAssignment */
+        foreach ($keys as $key) {
+            $result[] = $this->normalizeKey($key);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function normalizeKey(mixed $key): string
+    {
+        // PHP turns a decimal-integer string array key, like '123', into int; cast it back so it is accepted.
+        if (\is_int($key)) {
+            return (string) $key;
+        }
+
         if (! \is_string($key)) {
             throw new InvalidArgumentException(\sprintf(self::ERROR_INVALID_KEY, \get_debug_type($key)));
         }
+
+        return $key;
     }
 }
