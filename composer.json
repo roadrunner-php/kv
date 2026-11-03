@@ -66,7 +66,7 @@
         "roxblnfk/unpoly": "^1.8",
         "spiral/code-style": "^2.3.1",
         "testo/testo": "^0.10.55",
-        "vimeo/psalm": "^6 || ^7"
+        "vimeo/psalm": "^7.0.1"
     },
     "replace": {
         "spiral/roadrunner-kv": "self.version"
